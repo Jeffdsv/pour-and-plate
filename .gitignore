@@ -1,0 +1,50 @@
+# ---- Java / Maven ----
+target/
+*.class
+*.jar
+*.war
+*.log
+hs_err_pid*
+
+# Maven wrapper: keep the wrapper jar, ignore the rest of the build output
+!.mvn/wrapper/maven-wrapper.jar
+
+# ---- IntelliJ IDEA ----
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ---- VS Code / Rider (C# service later) ----
+.vscode/
+.vs/
+bin/
+obj/
+*.user
+
+# ---- Node / React frontend (phase 2) ----
+node_modules/
+dist/
+build/
+npm-debug.log*
+yarn-error.log*
+
+# ---- Secrets and local config: NEVER commit these ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+application-local.yml
+application-local.properties
+
+# ---- Terraform (phase 5) ----
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+
+# ---- OS junk ----
+.DS_Store
+Thumbs.db
