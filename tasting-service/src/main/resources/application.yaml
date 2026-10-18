@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: tasting-service
+
+  # Connection to the Postgres container from docker-compose.yml
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tasting
+    username: pourplate
+    password: pourplate   # local dev only, later this comes from env variables / Kubernetes Secrets
+
+  jpa:
+    hibernate:
+      # Flyway owns the schema. Hibernate only CHECKS that entities match the tables,
+      # it never creates or changes tables itself.
+      ddl-auto: validate
+    # Turns off a Spring default that keeps DB connections open during the whole web request.
+    open-in-view: false
+
+  flyway:
+    enabled: true          # runs scripts in src/main/resources/db/migration on startup
+
+server:
+  port: 8081               # 8080 is kept free for the API gateway later
+
+# Actuator: exposes /actuator/health so Docker/Kubernetes can check the app is alive
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
