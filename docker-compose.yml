@@ -1,0 +1,25 @@
+# Local development setup for Pour & Plate.
+# Start:  docker compose up -d
+# Stop:   docker compose down
+# Reset (deletes all data!): docker compose down -v
+
+services:
+  postgres:
+    image: postgres:18            # Official PostgreSQL image from Docker Hub
+    container_name: pourplate-postgres
+    environment:
+      POSTGRES_DB: tasting        # Database created on first start
+      POSTGRES_USER: pourplate
+      POSTGRES_PASSWORD: pourplate   # Fine for local dev only, never for production
+    ports:
+      - "5432:5432"               # host port : container port
+    volumes:
+      - postgres-data:/var/lib/postgresql   # Keeps your data when the container restarts
+    healthcheck:                  # Lets Docker (and later other services) know when the DB is ready
+      test: ["CMD-SHELL", "pg_isready -U pourplate -d tasting"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:
