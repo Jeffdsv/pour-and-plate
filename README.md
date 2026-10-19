@@ -85,4 +85,4 @@ There are unit tests for the rating rules, service tests with Mockito, and integ
 
 ## Author
 
-Your Name · [GitHub](https://github.com/Jeffdsv)
+ [GitHub](https://github.com/Jeffdsv)
