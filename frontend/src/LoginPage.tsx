@@ -26,6 +26,7 @@ export default function LoginPage({ onLoggedIn }: { onLoggedIn: (user: User) => 
         }}
       >
         <h1>Pour &amp; Plate</h1>
+        <p className="login-tagline">Food, friends and hidden gems</p>
 
         <label>
           Username

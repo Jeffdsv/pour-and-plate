@@ -1,3 +1,5 @@
+/* ========== base ========== */
+
 /* make the page fill the whole window so the map can too */
 html,
 body,
@@ -16,190 +18,26 @@ body,
   --radius: 16px;
 }
 
-/* the map takes all the space under the top bar */
-.map {
-  flex: 1;
-  min-height: 0;
-}
-
-/* popup when you click a grey dot */
-.place-popup {
-  min-width: 220px;
-}
-
-.place-popup .buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.place-popup button {
-  flex: 1;
-  padding: 6px;
-  cursor: pointer;
-}
-
-/* one row per slider: label, slider, number */
-.slider {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.slider span {
-  width: 80px;
-}
-
-.slider input {
-  flex: 1;
+/* inter everywhere, with normal system fonts as backup while it loads */
+body,
+button,
+input,
+textarea {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--text);
 }
 
 .error {
-  color: #a32d2d;
+  color: #A32D2D;
 }
 
-/* a colored circle with a white border, the white shape sits inside */
-.pin-body {
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  border-radius: 50%;
-  border: 2px solid white;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-  cursor: pointer;
-}
+/* ========== layout ========== */
 
-.pin-body svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-/* the notes text box in the rating form */
-.notes {
-  width: 100%;
-  box-sizing: border-box;
-  margin-top: 4px;
-  font: inherit;
-  resize: vertical;
-}
-
-/* our own close button in the top right corner of the popup */
-.place-popup {
-  position: relative;
-}
-
-.close-button {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  border: none;
-  background: none;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-/* my notes shown under the ratings */
-.notes-text {
-  font-style: italic;
-  color: #555;
-}
-
-/* the remove button is red so it stands out as a destructive action */
-.danger {
-  color: #a32d2d;
-}
-
-/* the page is a column: the top bar first, then the map */
+/* the whole app fills the screen, top bar on top and the rest below it */
 .app {
   display: flex;
   flex-direction: column;
-  height: 100%;
-}
-
-.top-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
-  background: white;
-  border-bottom: 1px solid #ddd;
-}
-
-/* pushes the name and the button to the right */
-.user-name {
-  margin-left: auto;
-}
-
-/* login page: a white box in the middle of the screen */
-.login-page {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f4f1ec;
-}
-
-.login-box {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: min(320px, 90vw);
-  padding: 24px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-}
-
-.login-box h1 {
-  margin: 0 0 8px;
-  font-size: 24px;
-}
-
-.login-box label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.login-box input,
-.login-box button {
-  padding: 8px;
-  font: inherit;
-}
-
-/* the invite link box opens under the button, on top of the map */
-.invite {
-  position: relative;
-}
-
-.invite-box {
-  position: absolute;
-  top: 40px;
-  left: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-  width: max-content;
-  max-width: 90vw;
-}
-
-.invite-box input {
-  width: 260px;
-}
-
-.close-button-inline {
-  border: none;
-  background: none;
-  font-size: 18px;
-  cursor: pointer;
+  height: 100dvh;
 }
 
 /* the area under the top bar, the panel floats on top of the map in here */
@@ -210,13 +48,71 @@ body,
   display: flex;
 }
 
+/* the map fills all the space inside main */
+.map {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+/* ========== top bar ========== */
+
+/* clean white top bar with a soft shadow */
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: white;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
+  z-index: 1200;
+}
+
+.top-bar strong {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+/* pushes my name and the log out button to the right */
+.top-bar .user-name {
+  margin-left: auto;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* pill shaped button */
+.top-bar button:not(.menu-button) {
+  padding: 8px 16px;
+  border: 1px solid #D1D5DB;
+  border-radius: 999px;
+  background: white;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.top-bar button:not(.menu-button):hover {
+  background: #F3F4F6;
+}
+
+/* the button that opens the side panel, round when you hover it */
 .menu-button {
+  width: 40px;
+  height: 40px;
+  padding: 4px 8px;
   border: none;
+  border-radius: 50%;
   background: none;
+  color: var(--blue);
   font-size: 22px;
   cursor: pointer;
-  padding: 4px 8px;
 }
+
+.menu-button:hover {
+  background: var(--blue-light);
+}
+
+/* ========== side panel ========== */
 
 /* the floating card on the left, pushed out of view when closed */
 .side-panel {
@@ -326,6 +222,13 @@ body,
   border-top: 1px solid #EEE;
 }
 
+.close-button-inline {
+  border: none;
+  background: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
 /* on a phone the panel slides in from the edge and covers most of the map */
 @media (max-width: 768px) {
   .side-panel {
@@ -338,78 +241,87 @@ body,
   }
 }
 
-/* the whole app fills the screen, top bar on top and the rest below it */
-.app {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-}
+/* ========== invite ========== */
 
-/* the map fills all the space inside main */
-.main .map {
-  flex: 1;
-  height: 100%;
-}
-
-/* inter everywhere, with normal system fonts as backup while it loads */
-body,
-button,
-input,
-textarea {
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  color: var(--text);
-}
-
-/* clean white top bar with a soft shadow instead of a hard line */
-.top-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  background: white;
-  border-bottom: none;
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
-  z-index: 1200;
-}
-
-.top-bar strong {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--blue);
-}
-
-/* pushes my name and the log out button to the right */
-.top-bar .user-name {
-  margin-left: auto;
-  font-weight: 500;
-  color: var(--muted);
-}
-
-/* pill shaped button, the style we will use for buttons from now on */
-.top-bar button:not(.menu-button) {
-  padding: 8px 16px;
-  border: 1px solid #D1D5DB;
+/* invite button fills the bottom of the panel */
+.invite-button {
+  width: 100%;
+  padding: 10px;
+  border: none;
   border-radius: 999px;
-  background: white;
-  font-weight: 500;
+  background: var(--blue);
+  color: white;
+  font-weight: 600;
   cursor: pointer;
 }
 
-.top-bar button:not(.menu-button):hover {
-  background: #F3F4F6;
+.invite-button:hover {
+  background: #2A4D7A;
 }
 
-/* round hover area for the menu button */
-.menu-button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  color: var(--blue);
-}
-
-.menu-button:hover {
+/* the link box sits under the button as a light blue card */
+.invite-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 28px 12px 12px;
+  border-radius: 12px;
   background: var(--blue-light);
 }
+
+.invite-box input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+}
+
+.invite-box span {
+  width: 100%;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.invite-box .close-button-inline {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+}
+
+.copy-button {
+  padding: 8px 14px;
+  border: 1px solid var(--blue);
+  border-radius: 999px;
+  background: white;
+  color: var(--blue);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ========== map pins ========== */
+
+/* a colored circle with a white border, the white shape sits inside */
+.pin-body {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+.pin-body svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ========== popups ========== */
 
 /* leaflet uses its own font and small text in popups, we want ours */
 .leaflet-container {
@@ -427,6 +339,31 @@ textarea {
   margin: 16px 18px;
 }
 
+.place-popup {
+  position: relative;
+  min-width: 220px;
+}
+
+/* round grey close button in the top right corner */
+.close-button {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.close-button:hover {
+  background: #F3F4F6;
+}
+
 /* right margin so a long name doesnt go under the close button */
 .popup-title {
   margin: 0 24px 6px 0;
@@ -435,7 +372,7 @@ textarea {
   color: var(--blue);
 }
 
-/* small rounded label for the category */
+/* small rounded label, capital letter on every word for categories */
 .chip {
   display: inline-block;
   padding: 3px 10px;
@@ -447,24 +384,41 @@ textarea {
   text-transform: capitalize;
 }
 
+.chip.wishlist {
+  margin-top: 12px;
+  background: #FDF1E0;
+  color: #BA7517;
+  text-transform: none;
+}
+
 .popup-address {
   margin: 8px 0 0;
   color: var(--muted);
   font-size: 13px;
 }
 
+/* my notes shown under the ratings */
+.notes-text {
+  font-style: italic;
+  color: #555;
+}
+
 .place-popup .buttons {
+  display: flex;
+  gap: 8px;
   margin-top: 14px;
 }
 
 /* pill buttons, outlined by default and filled blue for the main action */
 .place-popup .pill {
+  flex: 1;
   padding: 9px 14px;
   border: 1px solid var(--blue);
   border-radius: 999px;
   background: white;
   color: var(--blue);
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -481,19 +435,33 @@ textarea {
   background: #2A4D7A;
 }
 
-/* round grey hover area for the close button */
-.place-popup .close-button {
-  top: -8px;
-  right: -10px;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border-radius: 50%;
-  color: var(--muted);
+/* red outlined pill for removing */
+.place-popup .pill.danger {
+  border-color: #E5A3A3;
+  color: #A32D2D;
 }
 
-.place-popup .close-button:hover {
-  background: #F3F4F6;
+.place-popup .pill.danger:hover {
+  background: #FDECEC;
+}
+
+/* ========== score and stars ========== */
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* the score in a dark blue rounded box */
+.score-box {
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--blue);
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 /* grey stars with the gold ones on top */
@@ -515,23 +483,6 @@ textarea {
   color: var(--gold);
 }
 
-.score-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-/* the score in a dark blue rounded box */
-.score-box {
-  padding: 6px 10px;
-  border-radius: 10px;
-  background: var(--blue);
-  color: white;
-  font-size: 18px;
-  font-weight: 700;
-}
-
 /* label on the left, number on the right */
 .rating-list {
   list-style: none;
@@ -550,44 +501,30 @@ textarea {
   color: var(--text);
 }
 
-.chip.wishlist {
-  margin-top: 12px;
-  background: #FDF1E0;
-  color: #BA7517;
-}
+/* ========== rating form ========== */
 
-/* red outlined pill for removing */
-.place-popup .pill.danger {
-  border-color: #E5A3A3;
-  color: #A32D2D;
-}
-
-.place-popup .pill.danger:hover {
-  background: #FDECEC;
-}
-
-/* only the category chip should have capital letters on every word */
-.chip.wishlist {
-  text-transform: none;
-}
-
-/* button text always stays on one line */
-.place-popup .pill {
-  white-space: nowrap;
-}
-
-/* rating form inside the popup */
 .rating-form {
   margin-top: 8px;
 }
 
+/* one row per slider: label, slider, number */
+.slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* every label gets the same width so all sliders line up */
 .slider span {
-  width: 90px;
+  flex-shrink: 0;
+  width: 100px;
   color: var(--muted);
 }
 
 /* accent color paints the slider in our blue instead of the browser default */
 .slider input[type='range'] {
+  flex: 1;
   accent-color: var(--blue);
   cursor: pointer;
 }
@@ -597,80 +534,103 @@ textarea {
   text-align: right;
 }
 
-.rating-form .notes {
+.notes {
+  width: 100%;
+  box-sizing: border-box;
   margin-top: 12px;
   padding: 10px;
   border: 1px solid #D1D5DB;
   border-radius: 12px;
+  font: inherit;
+  resize: vertical;
 }
 
-.rating-form .notes:focus {
+.notes:focus {
   outline: none;
   border-color: var(--blue);
 }
 
-/* invite button fills the bottom of the panel */
-.invite-button {
-  width: 100%;
-  padding: 10px;
+/* ========== login and signup ========== */
+
+/* blue gradient behind a white card in the middle of the screen */
+.login-page {
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: linear-gradient(160deg, var(--blue) 0%, #2E5A8C 100%);
+}
+
+.login-box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(360px, 100%);
+  padding: 32px 28px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.login-box h1 {
+  margin: 0;
+  font-size: 26px;
+  color: var(--blue);
+  text-align: center;
+}
+
+.login-tagline {
+  margin: -8px 0 8px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.login-box label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* bigger rounded inputs with a soft blue ring when you type in them */
+.login-box input {
+  padding: 12px 14px;
+  border: 1px solid #D1D5DB;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.login-box input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-light);
+}
+
+.login-box button {
+  margin-top: 4px;
+  padding: 12px;
   border: none;
   border-radius: 999px;
   background: var(--blue);
   color: white;
+  font: inherit;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
 }
 
-.invite-button:hover {
+.login-box button:hover {
   background: #2A4D7A;
 }
 
-/* in the panel the link box sits under the button instead of floating */
-.panel-footer .invite-box {
-  position: relative;
-  top: auto;
-  flex-wrap: wrap;
-  width: auto;
-  margin-top: 10px;
-  padding: 28px 12px 12px;
-  border: none;
-  border-radius: 12px;
-  background: var(--blue-light);
-  box-shadow: none;
-}
-
-.panel-footer .invite-box input {
-  flex: 1;
-  width: auto;
-  min-width: 0;
-  padding: 8px;
-  border: 1px solid #D1D5DB;
-  border-radius: 8px;
-}
-
-.panel-footer .invite-box span {
-  width: 100%;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.panel-footer .invite-box .close-button-inline {
-  position: absolute;
-  top: 4px;
-  right: 8px;
-}
-
-.copy-button {
-  padding: 8px 14px;
-  border: 1px solid var(--blue);
-  border-radius: 999px;
-  background: white;
-  color: var(--blue);
-  font-weight: 600;
-  cursor: pointer;
-}
-/* every label gets the same width so all sliders line up */
-.slider span {
-  flex-shrink: 0;
-  width: 100px;
+.login-box .error {
+  margin: 0;
+  font-size: 14px;
+  text-align: center;
 }
