@@ -3,6 +3,8 @@ import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaf
 import 'leaflet/dist/leaflet.css'
 import type { Restaurant } from './types'
 import { fetchPlaces, type Bounds, type Place } from './places'
+import { fetchRestaurants } from './restaurants'
+import PlacePopup from './PlacePopup'
 
 // center of stockholm as latitude and longitude
 const STOCKHOLM: [number, number] = [59.3293, 18.0686]
@@ -54,9 +56,8 @@ function App() {
 
   // runs once when the page loads and fetches my restaurants
   useEffect(() => {
-    fetch('/api/restaurants')
-      .then((response) => response.json())
-      .then((data: Restaurant[]) => setRestaurants(data))
+    fetchRestaurants()
+      .then(setRestaurants)
       .catch((error) => console.error('could not load restaurants', error))
   }, [])
 
@@ -72,8 +73,13 @@ function App() {
       .catch((error) => console.error('could not load places', error))
   }, [])
 
+    // when a place is saved, add it to my restaurants, or replace it if it was already there
+  const handleSaved = (saved: Restaurant) => {
+    setRestaurants((current) => [...current.filter((r) => r.id !== saved.id), saved])
+  }
+
   // skip places i have already saved, so they are not drawn twice
-  const savedIds = new Set(restaurants.map((r) => r.osmId))
+  const savedIds = new Set(restaurants.map((r) => r.placeId))
   const unsaved = places.filter((p) => !savedIds.has(p.id))
 
   return (
@@ -94,13 +100,8 @@ function App() {
           radius={6}
           pathOptions={{ color: COLORS.UNSAVED, fillColor: COLORS.UNSAVED, fillOpacity: 0.7 }}
         >
-          <Popup>
-            <strong>{p.name}</strong>
-            {/* sushi_restaurant becomes sushi restaurant */}
-            <br />
-            {p.category.replaceAll('_', ' ')}
-            {p.address && <><br />{p.address}</>}
-            {p.website && <><br /><a href={p.website} target="_blank" rel="noreferrer">Website</a></>}
+                    <Popup>
+            <PlacePopup place={p} onSaved={handleSaved} />
           </Popup>
         </CircleMarker>
       ))}

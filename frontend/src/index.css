@@ -10,3 +10,40 @@ body,
   height: 100%;
   width: 100%;
 }
+
+/* popup when you click a grey dot */
+.place-popup {
+  min-width: 220px;
+}
+
+.place-popup .buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.place-popup button {
+  flex: 1;
+  padding: 6px;
+  cursor: pointer;
+}
+
+/* one row per slider: label, slider, number */
+.slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.slider span {
+  width: 80px;
+}
+
+.slider input {
+  flex: 1;
+}
+
+.error {
+  color: #a32d2d;
+}

@@ -4,7 +4,7 @@ export type RestaurantStatus = 'VISITED' | 'WANT_TO_VISIT'
 // same fields as RestaurantResponse in java
 export interface Restaurant {
   id: number
-  osmId: string | null
+  placeId: string | null
   name: string
   address: string | null
   city: string | null
