@@ -18,3 +18,11 @@ export interface Restaurant {
   notes: string | null
   visitedOn: string | null
 }
+
+// the logged in user, same fields as UserResponse in java
+export interface User {
+  id: number
+  username: string
+  displayName: string
+  role: 'ADMIN' | 'FRIEND'
+}

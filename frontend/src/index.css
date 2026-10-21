@@ -6,9 +6,10 @@ body,
   margin: 0;
 }
 
+/* the map takes all the space under the top bar */
 .map {
-  height: 100%;
-  width: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 /* popup when you click a grey dot */
@@ -98,4 +99,62 @@ body,
 /* the remove button is red so it stands out as a destructive action */
 .danger {
   color: #a32d2d;
+}
+
+/* the page is a column: the top bar first, then the map */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: white;
+  border-bottom: 1px solid #ddd;
+}
+
+/* pushes the name and the button to the right */
+.user-name {
+  margin-left: auto;
+}
+
+/* login page: a white box in the middle of the screen */
+.login-page {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f1ec;
+}
+
+.login-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(320px, 90vw);
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.login-box h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+.login-box label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.login-box input,
+.login-box button {
+  padding: 8px;
+  font: inherit;
 }

@@ -1,4 +1,5 @@
 import type { Restaurant, RestaurantStatus } from './types'
+import { csrfHeaders } from './api'
 
 // what we send when saving, same fields as SaveRestaurantRequest in java
 export interface SaveRestaurantRequest {
@@ -28,7 +29,7 @@ export async function fetchRestaurants(): Promise<Restaurant[]> {
 export async function saveRestaurant(request: SaveRestaurantRequest): Promise<Restaurant> {
   const response = await fetch('/api/restaurants', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
     body: JSON.stringify(request),
   })
 
@@ -43,7 +44,7 @@ export async function saveRestaurant(request: SaveRestaurantRequest): Promise<Re
 
 // removes my review, the place itself stays on the map as a red pin
 export async function deleteRestaurant(id: number): Promise<void> {
-  const response = await fetch(`/api/restaurants/${id}`, { method: 'DELETE' })
+    const response = await fetch(`/api/restaurants/${id}`, { method: 'DELETE', headers: csrfHeaders() })
   if (!response.ok) {
     throw new Error(`removing failed with ${response.status}`)
   }

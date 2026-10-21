@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import se.svent.tasting.restaurant.RestaurantNotFoundException;
 
+import org.springframework.security.core.AuthenticationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -18,6 +19,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    // wrong username or password, the same message for both so nobody can find out which usernames exist
+    @ExceptionHandler(AuthenticationException.class)
+    public ProblemDetail handleAuthentication(AuthenticationException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "wrong username or password");
     }
 
     // the @Valid checks failed, list every field that was wrong

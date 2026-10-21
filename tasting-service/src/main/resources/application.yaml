@@ -21,6 +21,11 @@ spring:
 
 server:
   port: 8081               # 8080 is kept free for the API gateway later
+  servlet:
+    session:
+      cookie:
+        http-only: true    # javascript in the page can never read the session cookie
+        same-site: lax     # the browser does not send it with requests from other websites              # 8080 is kept free for the API gateway later
 
 # Actuator: exposes /actuator/health so Docker/Kubernetes can check the app is alive
 management:
@@ -28,3 +33,8 @@ management:
     web:
       exposure:
         include: health,info
+app:
+  admin:
+    username: svent
+    # never write the real password here, it is read from the environment variable ADMIN_PASSWORD
+    password: ${ADMIN_PASSWORD:}
