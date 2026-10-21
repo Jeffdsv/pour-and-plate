@@ -1,6 +1,5 @@
 package se.svent.tasting.user;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,12 +21,10 @@ public class UserController {
         this.restaurants = restaurants;
     }
 
-    // GET /api/users gives everyone with an account, sorted by name for the list
+    // GET /api/users gives everyone with an account plus their visited and want to go counts
     @GetMapping
-    public List<se.svent.tasting.user.UserResponse> findAll() {
-        return users.findAll(Sort.by("displayName")).stream()
-                .map(se.svent.tasting.user.UserResponse::from)
-                .toList();
+    public List<UserSummary> findAll() {
+        return users.summarizeUsers();
     }
 
     // GET /api/users/3/restaurants gives someone elses map, read only
