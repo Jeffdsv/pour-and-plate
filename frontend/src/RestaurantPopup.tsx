@@ -3,6 +3,7 @@ import type { Restaurant } from './types'
 import { deleteRestaurant, saveRestaurant } from './restaurants'
 import RatingForm, { type Rating } from './RatingForm'
 import Stars from './Stars'
+import WebsiteLink from './WebsiteLink'
 
 // what you see when you click a saved pin, green or orange
 // on a friends map it is read only, so the buttons are hidden
@@ -42,6 +43,7 @@ export default function RestaurantPopup({
       city: r.city,
       latitude: r.latitude,
       longitude: r.longitude,
+      website: r.website,
       status: 'VISITED',
       foodRating: rating.food,
       atmosphereRating: rating.atmosphere,
@@ -69,6 +71,7 @@ export default function RestaurantPopup({
 
       <h3 className="popup-title">{r.name}</h3>
       {r.address && <p className="popup-address">{r.address}</p>}
+      <WebsiteLink url={r.website} />
 
       {editing ? (
         <RatingForm

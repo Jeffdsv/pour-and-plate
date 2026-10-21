@@ -74,6 +74,7 @@ public class RestaurantService {
         restaurant.setAddress(request.address());
         restaurant.setCity(request.city());
         restaurant.setNotes(request.notes());
+        restaurant.setWebsite(request.website());
 
         return RestaurantResponse.from(repository.save(restaurant));
     }

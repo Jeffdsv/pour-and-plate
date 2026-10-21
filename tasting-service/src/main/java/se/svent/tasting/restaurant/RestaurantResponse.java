@@ -18,7 +18,9 @@ public record RestaurantResponse(
         Integer valueRating,
         Double myScore,
         String notes,
-        LocalDate visitedOn
+        LocalDate visitedOn,
+        String website
+
 ) {
 
     // Converts a Restaurant (database) into a response (API)
@@ -37,7 +39,8 @@ public record RestaurantResponse(
                 r.getValueRating(),
                 r.getMyScore(),
                 r.getNotes(),
-                r.getVisitedOn()
+                r.getVisitedOn(),
+                r.getWebsite()
         );
     }
 }

@@ -17,6 +17,7 @@ export interface Restaurant {
   myScore: number | null
   notes: string | null
   visitedOn: string | null
+  website: string | null
 }
 
 // the logged in user, same fields as UserResponse in java

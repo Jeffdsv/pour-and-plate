@@ -14,6 +14,7 @@ export interface SaveRestaurantRequest {
   atmosphereRating?: number
   valueRating?: number
   notes?: string
+  website?: string | null
 }
 
 // gets all my saved restaurants

@@ -659,3 +659,17 @@ textarea {
   font-weight: 700;
   box-shadow: 0 0 0 4px rgba(226, 75, 74, 0.25), 0 1px 4px rgba(0, 0, 0, 0.3);
 }
+
+/* website under the address, blue like a link but without underline until hover */
+.website-link {
+  display: inline-block;
+  margin-top: 6px;
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.website-link:hover {
+  text-decoration: underline;
+}

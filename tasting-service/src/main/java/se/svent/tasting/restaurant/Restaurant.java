@@ -51,6 +51,9 @@ public class Restaurant extends BaseEntity {
     @Column(name = "visited_on")
     private LocalDate visitedOn;
 
+    @Column(length = 1000)
+    private String website;
+
     // Empty constructor JPA needs to load rows
     protected Restaurant() {
     }
@@ -159,6 +162,9 @@ public class Restaurant extends BaseEntity {
     public void setNotes(String notes) { this.notes = notes; }
 
     public LocalDate getVisitedOn() { return visitedOn; }
+
+    public String getWebsite() { return website; }
+    public void setWebsite(String website) { this.website = website; }
 
 
 }

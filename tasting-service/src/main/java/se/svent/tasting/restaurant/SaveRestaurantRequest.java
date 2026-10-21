@@ -36,6 +36,10 @@ public record SaveRestaurantRequest(
 
         String notes,
 
-        LocalDate visitedOn
+        LocalDate visitedOn,
+
+        @Size(max = 1000)
+        String website
 ) {
+
 }

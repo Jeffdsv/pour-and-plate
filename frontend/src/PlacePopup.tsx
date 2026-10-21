@@ -3,6 +3,7 @@ import type { Place } from './places'
 import type { Restaurant, RestaurantStatus } from './types'
 import { saveRestaurant } from './restaurants'
 import RatingForm, { type Rating } from './RatingForm'
+import WebsiteLink from './WebsiteLink'
 
 // what you see when you click a red pin
 // first two buttons, and if you pick visited you get the rating form
@@ -31,6 +32,7 @@ export default function PlacePopup({
       city: place.city,
       latitude: place.latitude,
       longitude: place.longitude,
+      website: place.website,
       status,
       ...(r
         ? { foodRating: r.food, atmosphereRating: r.atmosphere, valueRating: r.value, notes: r.notes || undefined }
@@ -46,7 +48,8 @@ export default function PlacePopup({
 
       <h3 className="popup-title">{place.name}</h3>
       <span className="chip">{place.category.replaceAll('_', ' ')}</span>
-      {place.address && <p className="popup-address">{place.address}</p>}
+            {place.address && <p className="popup-address">{place.address}</p>}
+      <WebsiteLink url={place.website} />
 
       {rating ? (
         <RatingForm
