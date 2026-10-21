@@ -22,6 +22,7 @@ public class RestaurantService {
     // all my reviews, or only one status if given
     @Transactional(readOnly = true)
     public List<RestaurantResponse> findAll(String username, RestaurantStatus status) {
+
         AppUser me = currentUser(username);
         List<Restaurant> restaurants = (status == null)
                 ? repository.findByUserId(me.getId())
@@ -35,9 +36,16 @@ public class RestaurantService {
     // anyone logged in may look at anyones map, but only read it, changing still checks the owner
     @Transactional(readOnly = true)
     public List<RestaurantResponse> findAllForUser(Long userId) {
+
         return repository.findByUserId(userId).stream()
                 .map(RestaurantResponse::from)
                 .toList();
+    }
+
+    // every place anyone has saved, with counts and the shared average score
+    @Transactional(readOnly = true)
+    public List<PlaceSummary> summarizeAllPlaces() {
+        return repository.summarizeAllPlaces();
     }
 
     @Transactional(readOnly = true)

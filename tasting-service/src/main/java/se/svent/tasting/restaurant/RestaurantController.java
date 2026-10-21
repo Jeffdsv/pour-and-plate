@@ -25,6 +25,11 @@ public class RestaurantController {
         return service.findAll(authentication.getName(), status);
     }
 
+    // GET /api/restaurants/summary gives everyones places combined, for the everyone view
+    @GetMapping("/summary")
+    public List<PlaceSummary> summary() {
+        return service.summarizeAllPlaces();
+    }
     // GET /api/restaurants/5
     @GetMapping("/{id}")
     public RestaurantResponse findById(@PathVariable Long id, Authentication authentication) {
