@@ -9,7 +9,7 @@ import java.util.List;
 public class PlaceService {
 
     // never send more than this many places in one answer
-    private static final int MAX_RESULTS = 1000;
+    private static final int MAX_RESULTS = 3000;
 
     // biggest allowed area in degrees, roughly 20 km, so nobody asks for all of sweden at once
     private static final double MAX_SPAN = 0.2;
@@ -30,7 +30,11 @@ public class PlaceService {
             throw new IllegalArgumentException("area is too big, zoom in");
         }
 
-        return repository.findInArea(south, west, north, east, MAX_RESULTS)
+        // the middle of the visible area, places closest to it come first
+        double centerLat = (south + north) / 2;
+        double centerLon = (west + east) / 2;
+
+        return repository.findInArea(south, west, north, east, centerLat, centerLon, MAX_RESULTS)
                 .stream()
                 .map(PlaceResponse::from)
                 .toList();

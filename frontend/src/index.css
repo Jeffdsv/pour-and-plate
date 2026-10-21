@@ -634,3 +634,28 @@ textarea {
   font-size: 14px;
   text-align: center;
 }
+
+/* ========== clusters ========== */
+
+/* removes the white square leaflet puts behind every div icon */
+.cluster-icon {
+  background: none;
+  border: none;
+}
+
+/* red bubble with the number in the middle and a soft red halo */
+.cluster-body {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid white;
+  border-radius: 50%;
+  background: #E24B4A;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 0 0 4px rgba(226, 75, 74, 0.25), 0 1px 4px rgba(0, 0, 0, 0.3);
+}

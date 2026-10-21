@@ -9,6 +9,8 @@ import PlacePopup from './PlacePopup'
 import RestaurantPopup from './RestaurantPopup'
 import { ICONS } from './icons'
 import VectorBaseMap from './VectorBaseMap'
+import MarkerClusterGroup from 'react-leaflet-cluster'
+import L from 'leaflet'
 
 // center of stockholm as latitude and longitude
 const STOCKHOLM: [number, number] = [59.3293, 18.0686]
@@ -22,6 +24,18 @@ const POPUP_OPTIONS = {
   closeButton: false,
   closeOnClick: false,
   autoClose: false,
+}
+
+// the round bubble with a number that replaces a group of red pins
+// bigger groups get a slightly bigger bubble
+function clusterIcon(cluster: { getChildCount: () => number }) {
+  const count = cluster.getChildCount()
+  const size = count < 10 ? 32 : count < 100 ? 38 : 44
+  return L.divIcon({
+    html: `<div class="cluster-body">${count}</div>`,
+    className: 'cluster-icon',
+    iconSize: [size, size],
+  })
 }
 
 // sits inside the map and tells MapPage which area is visible after every move or zoom
@@ -120,21 +134,29 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
   const unsaved = readOnly ? [] : places.filter((p) => !savedIds.has(p.id))
 
   return (
-    <MapContainer center={STOCKHOLM} zoom={15} className="map">
+        <MapContainer center={STOCKHOLM} zoom={15} maxZoom={19} className="map">
             {/* the clean vector map background */}
       <VectorBaseMap />
 
       <VisibleAreaWatcher onChange={loadArea} />
 
-      {/* red pins first, so saved pins are drawn on top */}
-      {unsaved.map((p) => (
-        <Marker
-          key={p.id}
-          position={[p.latitude, p.longitude]}
-          icon={ICONS.UNSAVED}
-          eventHandlers={{ click: () => selectPlace(p) }}
-        />
-      ))}
+      {/* red pins grouped into number bubbles that split up when you zoom in */}
+      <MarkerClusterGroup
+        chunkedLoading
+        maxClusterRadius={90}
+        showCoverageOnHover={false}
+        disableClusteringAtZoom={18}
+        iconCreateFunction={clusterIcon}
+      >
+        {unsaved.map((p) => (
+          <Marker
+            key={p.id}
+            position={[p.latitude, p.longitude]}
+            icon={ICONS.UNSAVED}
+            eventHandlers={{ click: () => selectPlace(p) }}
+          />
+        ))}
+      </MarkerClusterGroup>
 
       {/* saved restaurants, orange with a fork or green with a smiley */}
       {restaurants.map((r) => (
