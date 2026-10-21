@@ -88,3 +88,14 @@ body,
   font-size: 18px;
   cursor: pointer;
 }
+
+/* my notes shown under the ratings */
+.notes-text {
+  font-style: italic;
+  color: #555;
+}
+
+/* the remove button is red so it stands out as a destructive action */
+.danger {
+  color: #a32d2d;
+}

@@ -5,6 +5,7 @@ import type { Restaurant } from './types'
 import { fetchPlaces, type Bounds, type Place } from './places'
 import { fetchRestaurants } from './restaurants'
 import PlacePopup from './PlacePopup'
+import RestaurantPopup from './RestaurantPopup'
 import { ICONS } from './icons'
 
 // center of stockholm as latitude and longitude
@@ -12,6 +13,14 @@ const STOCKHOLM: [number, number] = [59.3293, 18.0686]
 
 // only load places when zoomed in this far, my api refuses areas that are too big
 const MIN_ZOOM = 14
+
+// options shared by both popups: only the close button or another pin closes them
+const POPUP_OPTIONS = {
+  offset: [0, -8] as [number, number],
+  closeButton: false,
+  closeOnClick: false,
+  autoClose: false,
+}
 
 // sits inside the map and tells App which area is visible after every move or zoom
 function VisibleAreaWatcher({ onChange }: { onChange: (bounds: Bounds | null) => void }) {
@@ -48,8 +57,9 @@ function App() {
   // all places in the visible area, also from my own api
   const [places, setPlaces] = useState<Place[]>([])
 
-  // the red pin that was clicked, its popup shows while this is not null
+  // the clicked pin, only one of these is set at a time
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
 
   // runs once when the page loads and fetches my restaurants
   useEffect(() => {
@@ -70,10 +80,32 @@ function App() {
       .catch((error) => console.error('could not load places', error))
   }, [])
 
-  // when a place is saved, add it to my restaurants and close the popup
+  // clicking a red pin closes any open popup for my own pins, and the other way round
+  const selectPlace = (p: Place) => {
+    setSelectedRestaurant(null)
+    setSelectedPlace(p)
+  }
+
+  const selectRestaurant = (r: Restaurant) => {
+    setSelectedPlace(null)
+    setSelectedRestaurant(r)
+  }
+
+  const closePopups = () => {
+    setSelectedPlace(null)
+    setSelectedRestaurant(null)
+  }
+
+  // a saved or changed restaurant replaces the old one in my list
   const handleSaved = (saved: Restaurant) => {
     setRestaurants((current) => [...current.filter((r) => r.id !== saved.id), saved])
-    setSelectedPlace(null)
+    closePopups()
+  }
+
+  // a removed restaurant disappears from my list and turns back into a red pin
+  const handleRemoved = (id: number) => {
+    setRestaurants((current) => current.filter((r) => r.id !== id))
+    closePopups()
   }
 
   // skip places i have already saved, so they are not drawn twice
@@ -96,35 +128,41 @@ function App() {
           key={p.id}
           position={[p.latitude, p.longitude]}
           icon={ICONS.UNSAVED}
-          eventHandlers={{ click: () => setSelectedPlace(p) }}
+          eventHandlers={{ click: () => selectPlace(p) }}
         />
       ))}
 
       {/* my saved restaurants, orange with a fork or green with a smiley */}
       {restaurants.map((r) => (
-        <Marker key={r.id} position={[r.latitude, r.longitude]} icon={ICONS[r.status]}>
-          <Popup>
-            <strong>{r.name}</strong>
-            <br />
-            {r.status === 'VISITED' ? `My score: ${r.myScore}` : 'Want to visit'}
-          </Popup>
-        </Marker>
+        <Marker
+          key={r.id}
+          position={[r.latitude, r.longitude]}
+          icon={ICONS[r.status]}
+          eventHandlers={{ click: () => selectRestaurant(r) }}
+        />
       ))}
 
-      {/* one popup for the selected red pin, only the close button or another pin closes it */}
+      {/* popup for a red pin */}
       {selectedPlace && (
-        <Popup
-          position={[selectedPlace.latitude, selectedPlace.longitude]}
-          offset={[0, -8]}
-          closeButton={false}
-          closeOnClick={false}
-          autoClose={false}
-        >
+        <Popup position={[selectedPlace.latitude, selectedPlace.longitude]} {...POPUP_OPTIONS}>
           <PlacePopup
             key={selectedPlace.id}
             place={selectedPlace}
             onSaved={handleSaved}
-            onClose={() => setSelectedPlace(null)}
+            onClose={closePopups}
+          />
+        </Popup>
+      )}
+
+      {/* popup for one of my own pins */}
+      {selectedRestaurant && (
+        <Popup position={[selectedRestaurant.latitude, selectedRestaurant.longitude]} {...POPUP_OPTIONS}>
+          <RestaurantPopup
+            key={selectedRestaurant.id}
+            restaurant={selectedRestaurant}
+            onSaved={handleSaved}
+            onRemoved={handleRemoved}
+            onClose={closePopups}
           />
         </Popup>
       )}
