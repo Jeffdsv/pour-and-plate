@@ -3,9 +3,11 @@ package se.svent.tasting.restaurant;
 import jakarta.persistence.*;
 import se.svent.tasting.common.BaseEntity;
 import se.svent.tasting.common.Ratings;
+import se.svent.tasting.user.AppUser;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Entity
 @Table(name = "restaurant")
@@ -53,24 +55,28 @@ public class Restaurant extends BaseEntity {
     protected Restaurant() {
     }
 
-    // Shared start for both options below. Private: use wantToVisit() or visited().
-    private Restaurant(String name, BigDecimal latitude, BigDecimal longitude) {
+    // shared start for both options below, every restaurant has an owner
+    private Restaurant(AppUser user, String name, BigDecimal latitude, BigDecimal longitude) {
+        if (user == null) {
+            throw new IllegalArgumentException("user is required");
+        }
+        this.user = user;
         setName(name);
         setLocation(latitude, longitude);
     }
 
-    // Option 1: save for later, no ratings
-    public static Restaurant wantToVisit(String name, BigDecimal latitude, BigDecimal longitude) {
-        Restaurant restaurant = new Restaurant(name, latitude, longitude);
+    // option 1: save for later, no ratings
+    public static Restaurant wantToVisit(AppUser user, String name, BigDecimal latitude, BigDecimal longitude) {
+        Restaurant restaurant = new Restaurant(user, name, latitude, longitude);
         restaurant.status = RestaurantStatus.WANT_TO_VISIT;
         return restaurant;
     }
 
-    // Option 2: already been there, all 3 ratings required
-    public static Restaurant visited(String name, BigDecimal latitude, BigDecimal longitude,
+    // option 2: already been there, all 3 ratings required
+    public static Restaurant visited(AppUser user, String name, BigDecimal latitude, BigDecimal longitude,
                                      Integer food, Integer atmosphere, Integer value,
                                      LocalDate visitedOn) {
-        Restaurant restaurant = new Restaurant(name, latitude, longitude);
+        Restaurant restaurant = new Restaurant(user, name, latitude, longitude);
         restaurant.review(food, atmosphere, value, visitedOn);
         return restaurant;
     }
@@ -116,6 +122,18 @@ public class Restaurant extends BaseEntity {
         double average = (foodRating + atmosphereRating + valueRating) / 3.0;
         return Math.round(average * 10) / 10.0;
     }
+
+    public AppUser getUser() { return user; }
+
+    // true if this review belongs to the given user
+    public boolean isOwnedBy(AppUser other) {
+        return Objects.equals(user.getId(), other.getId());
+    }
+
+    // whose review this is
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private AppUser user;
 
     public String getPlaceId() { return placeId; }
     public void setPlaceId(String placeId) { this.placeId = placeId; }

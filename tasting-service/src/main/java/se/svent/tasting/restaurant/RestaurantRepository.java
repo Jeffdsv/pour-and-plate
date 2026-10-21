@@ -7,10 +7,12 @@ import java.util.Optional;
 
 // Spring creates the code for this automatically when the app starts
 public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
+    // all my reviews
+    List<Restaurant> findByUserId(Long userId);
 
-    // All visited or all want-to-visit
-    List<Restaurant> findByStatus(RestaurantStatus status);
+    // my visited, or my want to visit
+    List<Restaurant> findByUserIdAndStatus(Long userId, RestaurantStatus status);
 
-    // Find by OpenStreetMap id. Empty if not saved yet.
-    Optional<Restaurant> findByPlaceId(String placeId);
+    // my review of one place, empty if i have not saved it
+    Optional<Restaurant> findByUserIdAndPlaceId(Long userId, String placeId);
 }

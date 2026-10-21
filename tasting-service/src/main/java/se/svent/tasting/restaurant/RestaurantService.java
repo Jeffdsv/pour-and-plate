@@ -1,7 +1,10 @@
 package se.svent.tasting.restaurant;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import se.svent.tasting.user.AppUser;
+import se.svent.tasting.user.AppUserRepository;
 
 import java.util.List;
 
@@ -9,18 +12,20 @@ import java.util.List;
 public class RestaurantService {
 
     private final RestaurantRepository repository;
+    private final AppUserRepository users;
 
-    // Spring gives the repository automatically (dependency injection)
-    public RestaurantService(RestaurantRepository repository) {
+    public RestaurantService(RestaurantRepository repository, AppUserRepository users) {
         this.repository = repository;
+        this.users = users;
     }
 
-    // All restaurants, or only one status if given
+    // all my reviews, or only one status if given
     @Transactional(readOnly = true)
-    public List<RestaurantResponse> findAll(RestaurantStatus status) {
+    public List<RestaurantResponse> findAll(String username, RestaurantStatus status) {
+        AppUser me = currentUser(username);
         List<Restaurant> restaurants = (status == null)
-                ? repository.findAll()
-                : repository.findByStatus(status);
+                ? repository.findByUserId(me.getId())
+                : repository.findByUserIdAndStatus(me.getId(), status);
 
         return restaurants.stream()
                 .map(RestaurantResponse::from)
@@ -28,19 +33,21 @@ public class RestaurantService {
     }
 
     @Transactional(readOnly = true)
-    public RestaurantResponse findById(Long id) {
-        return RestaurantResponse.from(getOrThrow(id));
+    public RestaurantResponse findById(String username, Long id) {
+        return RestaurantResponse.from(getOwnOrThrow(username, id));
     }
 
-    // Save a restaurant. Same OpenStreetMap place again = update, not a duplicate.
+    // saves a review for me, my same place again means update, not a duplicate
     @Transactional
-    public RestaurantResponse save(SaveRestaurantRequest request) {
+    public RestaurantResponse save(String username, SaveRestaurantRequest request) {
+        AppUser me = currentUser(username);
+
         Restaurant restaurant = (request.placeId() == null)
                 ? null
-                : repository.findByPlaceId(request.placeId()).orElse(null);
+                : repository.findByUserIdAndPlaceId(me.getId(), request.placeId()).orElse(null);
 
         if (restaurant == null) {
-            restaurant = create(request);
+            restaurant = create(me, request);
         } else {
             restaurant.setName(request.name());
             restaurant.setLocation(request.latitude(), request.longitude());
@@ -56,27 +63,37 @@ public class RestaurantService {
     }
 
     @Transactional
-    public void delete(Long id) {
-        repository.delete(getOrThrow(id));
+    public void delete(String username, Long id) {
+        repository.delete(getOwnOrThrow(username, id));
     }
 
-    // Find the restaurant with this id, and if it doesnt exist, throw the not found error
+    // helpers, only used inside this class
 
-    private Restaurant getOrThrow(Long id) {
-        return repository.findById(id)
+    // the logged in user, always exists because spring security already checked the login
+    private AppUser currentUser(String username) {
+        return users.findByUsername(username)
+                .orElseThrow(() -> new IllegalStateException("logged in user not found"));
+    }
+
+    // finds a review by id, but only if it is mine, otherwise 403
+    private Restaurant getOwnOrThrow(String username, Long id) {
+        Restaurant restaurant = repository.findById(id)
                 .orElseThrow(() -> new RestaurantNotFoundException(id));
+
+        if (!restaurant.isOwnedBy(currentUser(username))) {
+            throw new AccessDeniedException("you can only change your own reviews");
+        }
+        return restaurant;
     }
 
-    // Uses the two "factory" methods from Restaurant
-    private Restaurant create(SaveRestaurantRequest r) {
+    private Restaurant create(AppUser owner, SaveRestaurantRequest r) {
         if (r.status() == RestaurantStatus.VISITED) {
-            return Restaurant.visited(r.name(), r.latitude(), r.longitude(),
+            return Restaurant.visited(owner, r.name(), r.latitude(), r.longitude(),
                     r.foodRating(), r.atmosphereRating(), r.valueRating(), r.visitedOn());
         }
-        return Restaurant.wantToVisit(r.name(), r.latitude(), r.longitude());
+        return Restaurant.wantToVisit(owner, r.name(), r.latitude(), r.longitude());
     }
 
-    // Change status on an existing restaurant
     private void applyStatus(Restaurant restaurant, SaveRestaurantRequest r) {
         if (r.status() == RestaurantStatus.VISITED) {
             restaurant.review(r.foodRating(), r.atmosphereRating(), r.valueRating(), r.visitedOn());

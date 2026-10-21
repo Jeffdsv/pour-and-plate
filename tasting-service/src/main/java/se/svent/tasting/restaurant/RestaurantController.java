@@ -2,6 +2,7 @@ package se.svent.tasting.restaurant;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,29 +18,30 @@ public class RestaurantController {
         this.service = service;
     }
 
-    // GET /api/restaurants or /api/restaurants?status=VISITED
+    // GET /api/restaurants or /api/restaurants?status=VISITED, only my own
     @GetMapping
-    public List<RestaurantResponse> findAll(@RequestParam(required = false) RestaurantStatus status) {
-        return service.findAll(status);
+    public List<RestaurantResponse> findAll(@RequestParam(required = false) RestaurantStatus status,
+                                            Authentication authentication) {
+        return service.findAll(authentication.getName(), status);
     }
 
     // GET /api/restaurants/5
     @GetMapping("/{id}")
-    public RestaurantResponse findById(@PathVariable Long id) {
-        return service.findById(id);
+    public RestaurantResponse findById(@PathVariable Long id, Authentication authentication) {
+        return service.findById(authentication.getName(), id);
     }
 
-    // POST /api/restaurants with json in the body
-    // @Valid makes spring run the checks in SaveRestaurantRequest
+    // POST /api/restaurants with json in the body, saved for the logged in user
     @PostMapping
-    public RestaurantResponse save(@Valid @RequestBody SaveRestaurantRequest request) {
-        return service.save(request);
+    public RestaurantResponse save(@Valid @RequestBody SaveRestaurantRequest request,
+                                   Authentication authentication) {
+        return service.save(authentication.getName(), request);
     }
 
-    // DELETE /api/restaurants/5, returns 204 with no body
+    // DELETE /api/restaurants/5, only my own, returns 204 with no body
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        service.delete(id);
+    public void delete(@PathVariable Long id, Authentication authentication) {
+        service.delete(authentication.getName(), id);
     }
 }

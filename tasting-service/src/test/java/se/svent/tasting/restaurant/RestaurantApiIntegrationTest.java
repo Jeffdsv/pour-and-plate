@@ -8,7 +8,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
 import se.svent.tasting.TestcontainersConfiguration;
+import se.svent.tasting.user.AppUser;
+import se.svent.tasting.user.AppUserRepository;
+import se.svent.tasting.user.Role;
 
+import java.math.BigDecimal;
 import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.net.URI;
@@ -32,6 +36,12 @@ class RestaurantApiIntegrationTest {
 
     @Autowired
     private RestaurantRepository repository;
+
+    @Autowired
+    private AppUserRepository users;
+
+    private static final BigDecimal LAT = new BigDecimal("59.33");
+    private static final BigDecimal LON = new BigDecimal("18.06");
 
     // a cookie jar, keeps the session cookie and the csrf cookie between requests like a browser does
     private final CookieManager cookies = new CookieManager();
@@ -133,6 +143,28 @@ class RestaurantApiIntegrationTest {
         assertThat(repository.count()).isZero();
     }
 
+    // i should only see my own reviews, never someone elses
+    @Test
+    void list_showsOnlyMyOwnReviews() throws Exception {
+        repository.save(Restaurant.wantToVisit(otherUser(), "Eriks place", LAT, LON));
+
+        HttpResponse<String> response = get("/api/restaurants");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body()).doesNotContain("Eriks place");
+    }
+
+    // trying to remove someone elses review should give 403 and remove nothing
+    @Test
+    void deleteSomeoneElsesReview_returns403() throws Exception {
+        Restaurant theirs = repository.save(Restaurant.wantToVisit(otherUser(), "Eriks place", LAT, LON));
+
+        HttpResponse<String> response = delete("/api/restaurants/" + theirs.getId());
+
+        assertThat(response.statusCode()).isEqualTo(403);
+        assertThat(repository.count()).isEqualTo(1);
+    }
+
     // helpers
 
     // logs in like the frontend does: get a csrf cookie first, then send username and password
@@ -176,5 +208,19 @@ class RestaurantApiIntegrationTest {
 
     private String url(String path) {
         return "http://localhost:" + port + path;
+    }
+
+    // another user with reviews of their own, created once and reused
+    private AppUser otherUser() {
+        return users.findByUsername("erik")
+                .orElseGet(() -> users.save(new AppUser("erik", "Erik", "not used", Role.FRIEND)));
+    }
+
+    private HttpResponse<String> delete(String path) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(url(path)))
+                .header("X-XSRF-TOKEN", csrfToken())
+                .DELETE()
+                .build();
+        return http.send(request, HttpResponse.BodyHandlers.ofString());
     }
 }

@@ -2,6 +2,10 @@ package se.svent.tasting.restaurant;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import se.svent.tasting.user.AppUser;
+import se.svent.tasting.user.AppUserRepository;
+import se.svent.tasting.user.Role;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -9,66 +13,71 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 // TODO: mockito currently attaches itself as a java agent at runtime and prints a warning
 // newer jdk versions will block that by default, so the fix is to load mockito as an agent
 // in the maven surefire plugin in pom.xml, planned for when the jenkins pipeline is set up
 
-
-// test the logic in RestaurantService with a fake repository, no database
+// tests the logic in RestaurantService with fake repositories, no database
 class RestaurantServiceTest {
 
     private static final BigDecimal LAT = new BigDecimal("59.33");
     private static final BigDecimal LON = new BigDecimal("18.06");
 
+    // the logged in user in these tests
+    private static final String USERNAME = "anna";
+    private final AppUser anna = new AppUser(USERNAME, "Anna", "hash", Role.FRIEND);
+
     private RestaurantRepository repository;
     private RestaurantService service;
 
-    // runs before every test, so each test starts with a fresh fake
-    // mock() creates a fake repository
-    // save() on the fake just gives back the same restaurant it got
     @BeforeEach
     void setUp() {
         repository = mock(RestaurantRepository.class);
 
+        // the fake user repository always finds anna
+        AppUserRepository users = mock(AppUserRepository.class);
+        when(users.findByUsername(USERNAME)).thenReturn(Optional.of(anna));
+
         when(repository.save(any(Restaurant.class))).thenAnswer(call -> call.getArgument(0));
-
-        service = new RestaurantService(repository);
+        service = new RestaurantService(repository, users);
     }
 
-    // a new place we havent saved before should create a new restaurant
-    // osm = OpenStreetMap
+    // a place i have not saved before becomes a new restaurant owned by me
     @Test
-    void save_newOsmId_createsNewRestaurant() {
-        when(repository.findByPlaceId("node/1")).thenReturn(Optional.empty());
+    void save_newPlace_createsRestaurantOwnedByMe() {
+        when(repository.findByUserIdAndPlaceId(any(), eq("node/1"))).thenReturn(Optional.empty());
 
-        RestaurantResponse response = service.save(wantToVisitRequest("node/1"));
+        RestaurantResponse response = service.save(USERNAME, wantToVisitRequest("node/1"));
 
-        verify(repository).save(any(Restaurant.class));
+        // an ArgumentCaptor grabs the object that was passed to save, so we can look inside it
+        ArgumentCaptor<Restaurant> saved = ArgumentCaptor.forClass(Restaurant.class);
+        verify(repository).save(saved.capture());
+        assertThat(saved.getValue().getUser()).isSameAs(anna);
         assertThat(response.status()).isEqualTo(RestaurantStatus.WANT_TO_VISIT);
-        assertThat(response.name()).isEqualTo("Ekstedt");
     }
 
-    // the same place again should update the existing one, not make a duplicate
+    // my same place again should update my existing review, not make a duplicate
     @Test
-    void save_existingOsmId_updatesExistingRestaurant() {
-        Restaurant existing = Restaurant.wantToVisit("Ekstedt", LAT, LON);
-        when(repository.findByPlaceId("node/1")).thenReturn(Optional.of(existing));
+    void save_myExistingPlace_updatesIt() {
+        Restaurant existing = Restaurant.wantToVisit(anna, "Ekstedt", LAT, LON);
+        when(repository.findByUserIdAndPlaceId(any(), eq("node/1"))).thenReturn(Optional.of(existing));
 
-        RestaurantResponse response = service.save(visitedRequest("node/1", 9, 8, 6));
+        RestaurantResponse response = service.save(USERNAME, visitedRequest("node/1", 9, 8, 6));
 
         verify(repository).save(existing);
         assertThat(existing.getStatus()).isEqualTo(RestaurantStatus.VISITED);
         assertThat(response.myScore()).isEqualTo(7.7);
     }
 
-    // an id that doesnt exist should give not found error
+    // an id that doesnt exist should give our not found error
     @Test
     void findById_unknownId_throwsNotFound() {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.findById(99L))
+        assertThatThrownBy(() -> service.findById(USERNAME, 99L))
                 .isInstanceOf(RestaurantNotFoundException.class)
                 .hasMessageContaining("99");
     }
@@ -78,22 +87,21 @@ class RestaurantServiceTest {
     void delete_unknownId_doesNotDeleteAnything() {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.delete(99L))
+        assertThatThrownBy(() -> service.delete(USERNAME, 99L))
                 .isInstanceOf(RestaurantNotFoundException.class);
 
-        // never() checks that delete was NOT called
         verify(repository, never()).delete(any());
     }
 
     // helpers that build test requests so the tests above stay short
 
-    private SaveRestaurantRequest wantToVisitRequest(String osmId) {
-        return new SaveRestaurantRequest(osmId, "Ekstedt", null, "Stockholm", LAT, LON,
+    private SaveRestaurantRequest wantToVisitRequest(String placeId) {
+        return new SaveRestaurantRequest(placeId, "Ekstedt", null, "Stockholm", LAT, LON,
                 RestaurantStatus.WANT_TO_VISIT, null, null, null, null, null);
     }
 
-    private SaveRestaurantRequest visitedRequest(String osmId, int food, int atmosphere, int value) {
-        return new SaveRestaurantRequest(osmId, "Ekstedt", null, "Stockholm", LAT, LON,
+    private SaveRestaurantRequest visitedRequest(String placeId, int food, int atmosphere, int value) {
+        return new SaveRestaurantRequest(placeId, "Ekstedt", null, "Stockholm", LAT, LON,
                 RestaurantStatus.VISITED, food, atmosphere, value, null, null);
     }
 }
