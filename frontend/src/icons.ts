@@ -41,3 +41,25 @@ export const ICONS = {
   WANT_TO_VISIT: makeIcon('#BA7517', FORK, 30),
   VISITED: makeIcon('#1D9E75', SMILEY, 30),
 }
+
+// green pins with a number, for the everyone map, made once per number and then reused
+const countIcons = new Map<number, L.DivIcon>()
+
+// a green pin showing how many people have visited the place
+export function countIcon(count: number): L.DivIcon {
+  const existing = countIcons.get(count)
+  if (existing) {
+    return existing
+  }
+
+  // big numbers would not fit inside the circle
+  const label = count > 99 ? '99+' : String(count)
+  const number = `
+    <text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="bold"
+          font-family="sans-serif" fill="white">${label}</text>
+  `
+
+  const icon = makeIcon('#1D9E75', number, 30)
+  countIcons.set(count, icon)
+  return icon
+}

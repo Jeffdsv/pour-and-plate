@@ -5,9 +5,13 @@ import type { User } from './types'
 import LoginPage from './LoginPage'
 import SignupPage from './SignupPage'
 import MapPage from './MapPage'
+import EveryonePage from './EveryonePage'
 import InviteButton from './InviteButton'
 
-// decides what to show: the sign up page, the login page or the map
+// which map is shown: my own, everyone combined, or one friend by their id
+type View = 'me' | 'everyone' | number
+
+// decides what to show: the sign up page, the login page or a map
 function App() {
   // undefined while checking, null when nobody is logged in, a user when logged in
   const [user, setUser] = useState<User | null | undefined>(undefined)
@@ -15,8 +19,8 @@ function App() {
   // everyone with an account, for the dropdown
   const [users, setUsers] = useState<User[]>([])
 
-  // whose map is shown, null means my own
-  const [viewUserId, setViewUserId] = useState<number | null>(null)
+  // the map that is shown right now
+  const [view, setView] = useState<View>('me')
 
   // on page load, ask my api if this browser is already logged in through its session cookie
   useEffect(() => {
@@ -36,7 +40,7 @@ function App() {
 
   const handleLogout = () => {
     logout().finally(() => {
-      setViewUserId(null)
+      setView('me')
       setUser(null)
     })
   }
@@ -62,12 +66,16 @@ function App() {
         {/* only the admin can invite friends */}
         {user.role === 'ADMIN' && <InviteButton />}
 
-        {/* choose whose map to look at */}
+        {/* choose which map to look at */}
         <select
-          value={viewUserId ?? ''}
-          onChange={(e) => setViewUserId(e.target.value === '' ? null : Number(e.target.value))}
+          value={String(view)}
+          onChange={(e) => {
+            const value = e.target.value
+            setView(value === 'me' || value === 'everyone' ? value : Number(value))
+          }}
         >
-          <option value="">My map</option>
+          <option value="me">My map</option>
+          <option value="everyone">Everyone</option>
           {users
             .filter((u) => u.id !== user.id)
             .map((u) => (
@@ -79,8 +87,12 @@ function App() {
         <button onClick={handleLogout}>Log out</button>
       </header>
 
-      {/* a new key makes react start the map page fresh when switching person */}
-      <MapPage key={viewUserId ?? 'me'} viewUserId={viewUserId} />
+      {/* everyone gets its own page, my map and friends maps share MapPage */}
+      {view === 'everyone' ? (
+        <EveryonePage />
+      ) : (
+        <MapPage key={String(view)} viewUserId={view === 'me' ? null : view} />
+      )}
     </div>
   )
 }

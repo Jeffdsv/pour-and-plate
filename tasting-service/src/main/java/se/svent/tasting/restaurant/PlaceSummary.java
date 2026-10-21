@@ -11,4 +11,10 @@ public interface PlaceSummary {
     Long getVisitedCount();
     Long getWantCount();
     BigDecimal getAverageScore();
+
+    // names of everyone who visited, like "Anna, Erik, Jeff"
+    String getVisitedBy();
+
+    // names of everyone who wants to go
+    String getWantBy();
 }
