@@ -8,4 +8,7 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
 
     // used when someone logs in
     Optional<AppUser> findByUsername(String username);
+
+    // used to check that a username is free before signing up
+    boolean existsByUsername(String username);
 }

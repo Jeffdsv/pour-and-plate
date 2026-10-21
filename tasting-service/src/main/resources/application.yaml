@@ -36,5 +36,6 @@ management:
 app:
   admin:
     username: svent
-    # never write the real password here, it is read from the environment variable ADMIN_PASSWORD
     password: ${ADMIN_PASSWORD:}
+  # where the website runs, used to build invite links
+  frontend-url: http://localhost:5173

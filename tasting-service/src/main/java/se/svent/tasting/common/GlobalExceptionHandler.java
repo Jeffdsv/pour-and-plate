@@ -6,6 +6,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import se.svent.tasting.invite.InvalidInviteException;
+import se.svent.tasting.invite.UsernameTakenException;
 import se.svent.tasting.restaurant.RestaurantNotFoundException;
 
 import org.springframework.security.core.AuthenticationException;
@@ -38,6 +40,18 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed");
         problem.setProperty("errors", errors);
         return problem;
+    }
+
+    // the invite link was used, expired or never existed
+    @ExceptionHandler(InvalidInviteException.class)
+    public ProblemDetail handleInvalidInvite(InvalidInviteException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.GONE, ex.getMessage());
+    }
+
+    // someone already has that username
+    @ExceptionHandler(UsernameTakenException.class)
+    public ProblemDetail handleUsernameTaken(UsernameTakenException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 
     // id doesnt exist

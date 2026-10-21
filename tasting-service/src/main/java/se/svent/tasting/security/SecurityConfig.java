@@ -2,6 +2,7 @@ package se.svent.tasting.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -20,8 +21,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // who may call what, checked from top to bottom
+                // who may call what, checked from top to bottom, the first rule that matches wins
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/actuator/health/**", "/error").permitAll()
+                        // a friend with a link is not logged in yet, so checking and accepting must be open
+                        .requestMatchers(HttpMethod.GET, "/api/invites/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/invites/*/accept").permitAll()
+                        // only the admin can make new links
+                        .requestMatchers(HttpMethod.POST, "/api/invites").hasRole("ADMIN")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().denyAll())
 
