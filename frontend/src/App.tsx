@@ -2,13 +2,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Restaurant } from './types'
-import { fetchOsmRestaurants, type Bounds, type OsmRestaurant } from './overpass'
+import { fetchPlaces, type Bounds, type Place } from './places'
 
 // center of stockholm as latitude and longitude
 const STOCKHOLM: [number, number] = [59.3293, 18.0686]
 
-// only load restaurants when zoomed in this far, to be kind to the free overpass server
-const MIN_ZOOM = 15
+// only load places when zoomed in this far, my api refuses areas that are too big
+const MIN_ZOOM = 14
 
 // green for places i have rated, orange for my wishlist, grey for everything else
 const COLORS = {
@@ -49,8 +49,8 @@ function App() {
   // my saved restaurants from my own api
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
 
-  // all restaurants in the visible area from openstreetmap
-  const [osmRestaurants, setOsmRestaurants] = useState<OsmRestaurant[]>([])
+  // all places in the visible area, also from my own api
+  const [places, setPlaces] = useState<Place[]>([])
 
   // runs once when the page loads and fetches my restaurants
   useEffect(() => {
@@ -64,20 +64,20 @@ function App() {
   // useCallback keeps it the same function between redraws, so the watcher doesnt restart
   const loadArea = useCallback((bounds: Bounds | null) => {
     if (bounds === null) {
-      setOsmRestaurants([])
+      setPlaces([])
       return
     }
-    fetchOsmRestaurants(bounds)
-      .then(setOsmRestaurants)
-      .catch((error) => console.error('could not load restaurants from openstreetmap', error))
+    fetchPlaces(bounds)
+      .then(setPlaces)
+      .catch((error) => console.error('could not load places', error))
   }, [])
 
-  // skip osm places i have already saved, so they are not drawn twice
-  const savedOsmIds = new Set(restaurants.map((r) => r.osmId))
-  const unsaved = osmRestaurants.filter((r) => !savedOsmIds.has(r.osmId))
+  // skip places i have already saved, so they are not drawn twice
+  const savedIds = new Set(restaurants.map((r) => r.osmId))
+  const unsaved = places.filter((p) => !savedIds.has(p.id))
 
   return (
-    <MapContainer center={STOCKHOLM} zoom={MIN_ZOOM} className="map">
+    <MapContainer center={STOCKHOLM} zoom={15} className="map">
       {/* the map images come from openstreetmap, credit is required */}
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -87,17 +87,20 @@ function App() {
       <VisibleAreaWatcher onChange={loadArea} />
 
       {/* grey dots first, so my own pins are drawn on top */}
-      {unsaved.map((r) => (
+      {unsaved.map((p) => (
         <CircleMarker
-          key={r.osmId}
-          center={[r.latitude, r.longitude]}
+          key={p.id}
+          center={[p.latitude, p.longitude]}
           radius={6}
           pathOptions={{ color: COLORS.UNSAVED, fillColor: COLORS.UNSAVED, fillOpacity: 0.7 }}
         >
           <Popup>
-            <strong>{r.name}</strong>
-            {r.cuisine && <><br />{r.cuisine}</>}
-            {r.address && <><br />{r.address}</>}
+            <strong>{p.name}</strong>
+            {/* sushi_restaurant becomes sushi restaurant */}
+            <br />
+            {p.category.replaceAll('_', ' ')}
+            {p.address && <><br />{p.address}</>}
+            {p.website && <><br /><a href={p.website} target="_blank" rel="noreferrer">Website</a></>}
           </Popup>
         </CircleMarker>
       ))}
