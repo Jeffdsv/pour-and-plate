@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import { MapContainer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import { fetchSummary, type PlaceSummary } from './people'
 import { ICONS, countIcon } from './icons'
+import VectorBaseMap from './VectorBaseMap'
 
 // center of stockholm as latitude and longitude
 const STOCKHOLM: [number, number] = [59.3293, 18.0686]
@@ -23,11 +24,8 @@ export default function EveryonePage() {
 
   return (
     <MapContainer center={STOCKHOLM} zoom={14} className="map">
-      {/* the map images come from openstreetmap, credit is required */}
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+            {/* the clean vector map background */}
+      <VectorBaseMap />
 
       {places.map((p) => (
         <Marker

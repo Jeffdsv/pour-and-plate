@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Restaurant } from './types'
 import { fetchPlaces, type Bounds, type Place } from './places'
@@ -8,6 +8,7 @@ import { fetchRestaurantsOf } from './people'
 import PlacePopup from './PlacePopup'
 import RestaurantPopup from './RestaurantPopup'
 import { ICONS } from './icons'
+import VectorBaseMap from './VectorBaseMap'
 
 // center of stockholm as latitude and longitude
 const STOCKHOLM: [number, number] = [59.3293, 18.0686]
@@ -120,11 +121,8 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
 
   return (
     <MapContainer center={STOCKHOLM} zoom={15} className="map">
-      {/* the map images come from openstreetmap, credit is required */}
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+            {/* the clean vector map background */}
+      <VectorBaseMap />
 
       <VisibleAreaWatcher onChange={loadArea} />
 
