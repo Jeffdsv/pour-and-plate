@@ -32,6 +32,14 @@ public class RestaurantService {
                 .toList();
     }
 
+    // anyone logged in may look at anyones map, but only read it, changing still checks the owner
+    @Transactional(readOnly = true)
+    public List<RestaurantResponse> findAllForUser(Long userId) {
+        return repository.findByUserId(userId).stream()
+                .map(RestaurantResponse::from)
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     public RestaurantResponse findById(String username, Long id) {
         return RestaurantResponse.from(getOwnOrThrow(username, id));
