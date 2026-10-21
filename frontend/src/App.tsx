@@ -1,23 +1,17 @@
 import { useCallback, useEffect, useState } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Restaurant } from './types'
 import { fetchPlaces, type Bounds, type Place } from './places'
 import { fetchRestaurants } from './restaurants'
 import PlacePopup from './PlacePopup'
+import { ICONS } from './icons'
 
 // center of stockholm as latitude and longitude
 const STOCKHOLM: [number, number] = [59.3293, 18.0686]
 
 // only load places when zoomed in this far, my api refuses areas that are too big
 const MIN_ZOOM = 14
-
-// green for places i have rated, orange for my wishlist, grey for everything else
-const COLORS = {
-  VISITED: '#1D9E75',
-  WANT_TO_VISIT: '#BA7517',
-  UNSAVED: '#888780',
-}
 
 // sits inside the map and tells App which area is visible after every move or zoom
 function VisibleAreaWatcher({ onChange }: { onChange: (bounds: Bounds | null) => void }) {
@@ -54,6 +48,9 @@ function App() {
   // all places in the visible area, also from my own api
   const [places, setPlaces] = useState<Place[]>([])
 
+  // the red pin that was clicked, its popup shows while this is not null
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
+
   // runs once when the page loads and fetches my restaurants
   useEffect(() => {
     fetchRestaurants()
@@ -73,9 +70,10 @@ function App() {
       .catch((error) => console.error('could not load places', error))
   }, [])
 
-    // when a place is saved, add it to my restaurants, or replace it if it was already there
+  // when a place is saved, add it to my restaurants and close the popup
   const handleSaved = (saved: Restaurant) => {
     setRestaurants((current) => [...current.filter((r) => r.id !== saved.id), saved])
+    setSelectedPlace(null)
   }
 
   // skip places i have already saved, so they are not drawn twice
@@ -92,35 +90,44 @@ function App() {
 
       <VisibleAreaWatcher onChange={loadArea} />
 
-      {/* grey dots first, so my own pins are drawn on top */}
+      {/* red pins first, so my own pins are drawn on top */}
       {unsaved.map((p) => (
-        <CircleMarker
+        <Marker
           key={p.id}
-          center={[p.latitude, p.longitude]}
-          radius={6}
-          pathOptions={{ color: COLORS.UNSAVED, fillColor: COLORS.UNSAVED, fillOpacity: 0.7 }}
-        >
-                    <Popup>
-            <PlacePopup place={p} onSaved={handleSaved} />
-          </Popup>
-        </CircleMarker>
+          position={[p.latitude, p.longitude]}
+          icon={ICONS.UNSAVED}
+          eventHandlers={{ click: () => setSelectedPlace(p) }}
+        />
       ))}
 
-      {/* my saved restaurants, bigger and colored */}
+      {/* my saved restaurants, orange with a fork or green with a smiley */}
       {restaurants.map((r) => (
-        <CircleMarker
-          key={r.id}
-          center={[r.latitude, r.longitude]}
-          radius={10}
-          pathOptions={{ color: COLORS[r.status], fillColor: COLORS[r.status], fillOpacity: 0.8 }}
-        >
+        <Marker key={r.id} position={[r.latitude, r.longitude]} icon={ICONS[r.status]}>
           <Popup>
             <strong>{r.name}</strong>
             <br />
             {r.status === 'VISITED' ? `My score: ${r.myScore}` : 'Want to visit'}
           </Popup>
-        </CircleMarker>
+        </Marker>
       ))}
+
+      {/* one popup for the selected red pin, only the close button or another pin closes it */}
+      {selectedPlace && (
+        <Popup
+          position={[selectedPlace.latitude, selectedPlace.longitude]}
+          offset={[0, -8]}
+          closeButton={false}
+          closeOnClick={false}
+          autoClose={false}
+        >
+          <PlacePopup
+            key={selectedPlace.id}
+            place={selectedPlace}
+            onSaved={handleSaved}
+            onClose={() => setSelectedPlace(null)}
+          />
+        </Popup>
+      )}
     </MapContainer>
   )
 }

@@ -1,0 +1,43 @@
+import L from 'leaflet'
+
+// the white shapes inside the pins, drawn with svg on a 24 by 24 grid
+
+// a white plate with a thin rim, covers about 70 percent of the pin
+const PLATE = `
+  <circle cx="12" cy="12" r="8.4" fill="white" />
+  <circle cx="12" cy="12" r="5.4" fill="none" stroke="#E24B4A" stroke-opacity="0.35" stroke-width="1" />
+`
+
+// a white fork with three tines
+const FORK = `
+  <path fill="white" d="M9 4 V9 A3 3 0 0 0 11 11.83 V20 H13 V11.83 A3 3 0 0 0 15 9 V4
+                         H13.8 V9 H12.6 V4 H11.4 V9 H10.2 V4 Z" />
+`
+
+// a white smiley: two eyes and a curved mouth
+const SMILEY = `
+  <circle cx="9" cy="10" r="1.4" fill="white" />
+  <circle cx="15" cy="10" r="1.4" fill="white" />
+  <path d="M8 14 Q12 18 16 14" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" />
+`
+
+// builds one leaflet icon: a colored circle with a white shape inside
+function makeIcon(color: string, shape: string, size: number) {
+  return L.divIcon({
+    // our own class, so leaflet does not add its default white square
+    className: 'pin-icon',
+    html: `<div class="pin-body" style="background:${color}"><svg viewBox="0 0 24 24">${shape}</svg></div>`,
+    iconSize: [size, size],
+    // the middle of the circle sits exactly on the place
+    iconAnchor: [size / 2, size / 2],
+    // popups open just above the pin
+    popupAnchor: [0, -size / 2],
+  })
+}
+
+// created once and reused for every pin, which is faster than making a new icon each time
+export const ICONS = {
+  UNSAVED: makeIcon('#E24B4A', PLATE, 24),
+  WANT_TO_VISIT: makeIcon('#BA7517', FORK, 30),
+  VISITED: makeIcon('#1D9E75', SMILEY, 30),
+}

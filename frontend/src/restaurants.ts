@@ -38,4 +38,13 @@ export async function saveRestaurant(request: SaveRestaurantRequest): Promise<Re
     throw new Error(problem?.detail ?? `saving failed with ${response.status}`)
   }
   return response.json()
+
+}
+
+// removes my review, the place itself stays on the map as a red pin
+export async function deleteRestaurant(id: number): Promise<void> {
+  const response = await fetch(`/api/restaurants/${id}`, { method: 'DELETE' })
+  if (!response.ok) {
+    throw new Error(`removing failed with ${response.status}`)
+  }
 }
