@@ -3,6 +3,8 @@ import { fetchMe, logout } from './auth'
 import type { User } from './types'
 import LoginPage from './LoginPage'
 import MapPage from './MapPage'
+import InviteButton from './InviteButton'
+import SignupPage from './SignupPage'
 
 // decides what to show: the login page or the map
 function App() {
@@ -20,6 +22,11 @@ function App() {
     logout().finally(() => setUser(null))
   }
 
+    // an invite link looks like /invite/abc123, then show the sign up page instead of everything else
+  if (window.location.pathname.startsWith('/invite/')) {
+    return <SignupPage token={window.location.pathname.substring('/invite/'.length)} />
+  }
+
   // still checking, show nothing for a moment
   if (user === undefined) {
     return null
@@ -31,8 +38,10 @@ function App() {
 
   return (
     <div className="app">
-      <header className="top-bar">
+            <header className="top-bar">
         <strong>Pour &amp; Plate</strong>
+        {/* only the admin can invite friends */}
+        {user.role === 'ADMIN' && <InviteButton />}
         <span className="user-name">{user.displayName}</span>
         <button onClick={handleLogout}>Log out</button>
       </header>
