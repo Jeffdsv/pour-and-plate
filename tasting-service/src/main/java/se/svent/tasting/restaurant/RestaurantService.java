@@ -35,9 +35,9 @@ public class RestaurantService {
     // Save a restaurant. Same OpenStreetMap place again = update, not a duplicate.
     @Transactional
     public RestaurantResponse save(SaveRestaurantRequest request) {
-        Restaurant restaurant = (request.osmId() == null)
+        Restaurant restaurant = (request.placeId() == null)
                 ? null
-                : repository.findByOsmId(request.osmId()).orElse(null);
+                : repository.findByPlaceId(request.placeId()).orElse(null);
 
         if (restaurant == null) {
             restaurant = create(request);
@@ -47,7 +47,7 @@ public class RestaurantService {
             applyStatus(restaurant, request);
         }
 
-        restaurant.setOsmId(request.osmId());
+        restaurant.setPlaceId(request.placeId());
         restaurant.setAddress(request.address());
         restaurant.setCity(request.city());
         restaurant.setNotes(request.notes());

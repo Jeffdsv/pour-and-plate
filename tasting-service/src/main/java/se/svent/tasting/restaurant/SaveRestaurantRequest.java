@@ -8,7 +8,7 @@ import java.time.LocalDate;
 // What the app sends when you click Visited or Want to visit
 public record SaveRestaurantRequest(
 
-        String osmId,
+        String placeId,
 
         // @NotBlank Rejects null (not sent), "" (empty), and " "
         @NotBlank @Size(max = 200)

@@ -12,5 +12,5 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
     List<Restaurant> findByStatus(RestaurantStatus status);
 
     // Find by OpenStreetMap id. Empty if not saved yet.
-    Optional<Restaurant> findByOsmId(String osmId);
+    Optional<Restaurant> findByPlaceId(String placeId);
 }

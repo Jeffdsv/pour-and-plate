@@ -41,7 +41,7 @@ class RestaurantServiceTest {
     // osm = OpenStreetMap
     @Test
     void save_newOsmId_createsNewRestaurant() {
-        when(repository.findByOsmId("node/1")).thenReturn(Optional.empty());
+        when(repository.findByPlaceId("node/1")).thenReturn(Optional.empty());
 
         RestaurantResponse response = service.save(wantToVisitRequest("node/1"));
 
@@ -54,7 +54,7 @@ class RestaurantServiceTest {
     @Test
     void save_existingOsmId_updatesExistingRestaurant() {
         Restaurant existing = Restaurant.wantToVisit("Ekstedt", LAT, LON);
-        when(repository.findByOsmId("node/1")).thenReturn(Optional.of(existing));
+        when(repository.findByPlaceId("node/1")).thenReturn(Optional.of(existing));
 
         RestaurantResponse response = service.save(visitedRequest("node/1", 9, 8, 6));
 

@@ -44,7 +44,7 @@ class RestaurantApiIntegrationTest {
     void saveVisited_thenFetchById_returnsScore() throws Exception {
         HttpResponse<String> saved = post("""
                 {
-                  "osmId": "node/1", "name": "Ekstedt",
+                  "placeId": "node/1", "name": "Ekstedt",
                   "latitude": 59.33, "longitude": 18.06,
                   "status": "VISITED",
                   "foodRating": 9, "atmosphereRating": 8, "valueRating": 6
@@ -63,10 +63,10 @@ class RestaurantApiIntegrationTest {
 
     // same place twice should be one row in the real database
     @Test
-    void saveSameOsmIdTwice_keepsOneRow() throws Exception {
+    void saveSameplaceIdTwice_keepsOneRow() throws Exception {
         String json = """
                 {
-                  "osmId": "node/1", "name": "Ekstedt",
+                  "placeId": "node/1", "name": "Ekstedt",
                   "latitude": 59.33, "longitude": 18.06,
                   "status": "WANT_TO_VISIT"
                 }

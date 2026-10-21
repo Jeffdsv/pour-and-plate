@@ -6,7 +6,7 @@ import java.time.LocalDate;
 // What the API sends back
 public record RestaurantResponse(
         Long id,
-        String osmId,
+        String placeId,
         String name,
         String address,
         String city,
@@ -25,7 +25,7 @@ public record RestaurantResponse(
     public static RestaurantResponse from(Restaurant r) {
         return new RestaurantResponse(
                 r.getId(),
-                r.getOsmId(),
+                r.getPlaceId(),
                 r.getName(),
                 r.getAddress(),
                 r.getCity(),

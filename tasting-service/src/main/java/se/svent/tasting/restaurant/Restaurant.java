@@ -11,8 +11,8 @@ import java.time.LocalDate;
 @Table(name = "restaurant")
 public class Restaurant extends BaseEntity {
 
-    @Column(name = "osm_id", unique = true, length = 50)
-    private String osmId;
+    @Column(name = "placeId", unique = true, length = 50)
+    private String placeId;
 
     @Column(nullable = false, length = 200)
     private String name;
@@ -117,8 +117,8 @@ public class Restaurant extends BaseEntity {
         return Math.round(average * 10) / 10.0;
     }
 
-    public String getOsmId() { return osmId; }
-    public void setOsmId(String osmId) { this.osmId = osmId; }
+    public String getPlaceId() { return placeId; }
+    public void setPlaceId(String placeId) { this.placeId = placeId; }
 
     public String getName() { return name; }
 
