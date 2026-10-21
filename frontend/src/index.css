@@ -1,6 +1,10 @@
 /* make the page fill the whole window so the map can too */
 html,
 body,
+#root {
+  height: 100%;
+  margin: 0;
+}
 
 /* our colors in one place, used everywhere with var(--blue) and so on */
 :root {
@@ -345,4 +349,229 @@ body,
 .main .map {
   flex: 1;
   height: 100%;
+}
+
+/* inter everywhere, with normal system fonts as backup while it loads */
+body,
+button,
+input,
+textarea {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--text);
+}
+
+/* clean white top bar with a soft shadow instead of a hard line */
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: white;
+  border-bottom: none;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
+  z-index: 1200;
+}
+
+.top-bar strong {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+/* pushes my name and the log out button to the right */
+.top-bar .user-name {
+  margin-left: auto;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* pill shaped button, the style we will use for buttons from now on */
+.top-bar button:not(.menu-button) {
+  padding: 8px 16px;
+  border: 1px solid #D1D5DB;
+  border-radius: 999px;
+  background: white;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.top-bar button:not(.menu-button):hover {
+  background: #F3F4F6;
+}
+
+/* round hover area for the menu button */
+.menu-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--blue);
+}
+
+.menu-button:hover {
+  background: var(--blue-light);
+}
+
+/* leaflet uses its own font and small text in popups, we want ours */
+.leaflet-container {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+/* the popup box itself, rounder with a softer shadow */
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.leaflet-popup-content {
+  margin: 16px 18px;
+}
+
+/* right margin so a long name doesnt go under the close button */
+.popup-title {
+  margin: 0 24px 6px 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+/* small rounded label for the category */
+.chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--blue-light);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.popup-address {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.place-popup .buttons {
+  margin-top: 14px;
+}
+
+/* pill buttons, outlined by default and filled blue for the main action */
+.place-popup .pill {
+  padding: 9px 14px;
+  border: 1px solid var(--blue);
+  border-radius: 999px;
+  background: white;
+  color: var(--blue);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.place-popup .pill:hover {
+  background: var(--blue-light);
+}
+
+.place-popup .pill.primary {
+  background: var(--blue);
+  color: white;
+}
+
+.place-popup .pill.primary:hover {
+  background: #2A4D7A;
+}
+
+/* round grey hover area for the close button */
+.place-popup .close-button {
+  top: -8px;
+  right: -10px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--muted);
+}
+
+.place-popup .close-button:hover {
+  background: #F3F4F6;
+}
+
+/* grey stars with the gold ones on top */
+.stars {
+  position: relative;
+  display: inline-block;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: 2px;
+  color: #E5E7EB;
+}
+
+.stars-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--gold);
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* the score in a dark blue rounded box */
+.score-box {
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--blue);
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* label on the left, number on the right */
+.rating-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.rating-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  color: var(--muted);
+}
+
+.rating-list strong {
+  color: var(--text);
+}
+
+.chip.wishlist {
+  margin-top: 12px;
+  background: #FDF1E0;
+  color: #BA7517;
+}
+
+/* red outlined pill for removing */
+.place-popup .pill.danger {
+  border-color: #E5A3A3;
+  color: #A32D2D;
+}
+
+.place-popup .pill.danger:hover {
+  background: #FDECEC;
+}
+
+/* only the category chip should have capital letters on every word */
+.chip.wishlist {
+  text-transform: none;
+}
+
+/* button text always stays on one line */
+.place-popup .pill {
+  white-space: nowrap;
 }

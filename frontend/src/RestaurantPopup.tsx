@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Restaurant } from './types'
 import { deleteRestaurant, saveRestaurant } from './restaurants'
 import RatingForm, { type Rating } from './RatingForm'
+import Stars from './Stars'
 
 // what you see when you click a saved pin, green or orange
 // on a friends map it is read only, so the buttons are hidden
@@ -62,12 +63,12 @@ export default function RestaurantPopup({
       .catch((e: Error) => setError(e.message))
   }
 
-  return (
+    return (
     <div className="place-popup">
       <button className="close-button" onClick={onClose} aria-label="Close">×</button>
 
-      <strong>{r.name}</strong>
-      {r.address && <><br />{r.address}</>}
+      <h3 className="popup-title">{r.name}</h3>
+      {r.address && <p className="popup-address">{r.address}</p>}
 
       {editing ? (
         <RatingForm
@@ -85,13 +86,20 @@ export default function RestaurantPopup({
         <>
           {r.status === 'VISITED' ? (
             <>
-              <p>
-                Food {r.foodRating} · Atmosphere {r.atmosphereRating} · Value {r.valueRating}
-              </p>
-              <p>Score: <strong>{r.myScore}</strong></p>
+              {/* big score with stars next to it */}
+              <div className="score-row">
+                <span className="score-box">{r.myScore}</span>
+                <Stars score={r.myScore ?? 0} />
+              </div>
+
+              <ul className="rating-list">
+                <li><span>Food</span><strong>{r.foodRating}</strong></li>
+                <li><span>Atmosphere</span><strong>{r.atmosphereRating}</strong></li>
+                <li><span>Value</span><strong>{r.valueRating}</strong></li>
+              </ul>
             </>
           ) : (
-            <p>On the wishlist</p>
+            <span className="chip wishlist">On the wishlist</span>
           )}
 
           {r.notes && <p className="notes-text">{r.notes}</p>}
@@ -99,10 +107,10 @@ export default function RestaurantPopup({
           {/* only on my own map, a friends map is read only */}
           {!readOnly && (
             <div className="buttons">
-              <button onClick={() => setEditing(true)}>
+              <button className="pill primary" onClick={() => setEditing(true)}>
                 {r.status === 'VISITED' ? 'Change rating' : 'Visited'}
               </button>
-              <button className="danger" onClick={remove}>Remove</button>
+              <button className="pill danger" onClick={remove}>Remove</button>
             </div>
           )}
         </>

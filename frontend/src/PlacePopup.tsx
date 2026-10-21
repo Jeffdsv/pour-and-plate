@@ -40,14 +40,13 @@ export default function PlacePopup({
       .catch((e: Error) => setError(e.message))
   }
 
-  return (
+    return (
     <div className="place-popup">
       <button className="close-button" onClick={onClose} aria-label="Close">×</button>
 
-      <strong>{place.name}</strong>
-      <br />
-      {place.category.replaceAll('_', ' ')}
-      {place.address && <><br />{place.address}</>}
+      <h3 className="popup-title">{place.name}</h3>
+      <span className="chip">{place.category.replaceAll('_', ' ')}</span>
+      {place.address && <p className="popup-address">{place.address}</p>}
 
       {rating ? (
         <RatingForm
@@ -57,8 +56,8 @@ export default function PlacePopup({
         />
       ) : (
         <div className="buttons">
-          <button onClick={() => save('WANT_TO_VISIT')}>Want to visit</button>
-          <button onClick={() => setRating(true)}>Visited</button>
+          <button className="pill" onClick={() => save('WANT_TO_VISIT')}>Want to visit</button>
+          <button className="pill primary" onClick={() => setRating(true)}>Visited</button>
         </div>
       )}
 
