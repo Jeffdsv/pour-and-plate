@@ -13,7 +13,7 @@ import java.util.Objects;
 @Table(name = "restaurant")
 public class Restaurant extends BaseEntity {
 
-    @Column(name = "placeId", unique = true, length = 50)
+    @Column(name = "place_id", length = 64)
     private String placeId;
 
     @Column(nullable = false, length = 200)

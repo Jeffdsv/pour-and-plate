@@ -97,11 +97,11 @@ class RestaurantServiceTest {
 
     private SaveRestaurantRequest wantToVisitRequest(String placeId) {
         return new SaveRestaurantRequest(placeId, "Ekstedt", null, "Stockholm", LAT, LON,
-                RestaurantStatus.WANT_TO_VISIT, null, null, null, null, null);
+                RestaurantStatus.WANT_TO_VISIT, null, null, null, null, null, null);
     }
 
     private SaveRestaurantRequest visitedRequest(String placeId, int food, int atmosphere, int value) {
         return new SaveRestaurantRequest(placeId, "Ekstedt", null, "Stockholm", LAT, LON,
-                RestaurantStatus.VISITED, food, atmosphere, value, null, null);
+                RestaurantStatus.VISITED, food, atmosphere, value, null, null, null);
     }
 }

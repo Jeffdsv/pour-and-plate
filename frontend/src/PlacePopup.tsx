@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Place } from './places'
 import type { Restaurant, RestaurantStatus } from './types'
 import { saveRestaurant } from './restaurants'
@@ -11,16 +11,24 @@ export default function PlacePopup({
   place,
   onSaved,
   onClose,
+  onResize,
 }: {
   place: Place
   onSaved: (r: Restaurant) => void
   onClose: () => void
+  onResize: () => void
 }) {
   // false shows the two buttons, true shows the rating form
   const [rating, setRating] = useState(false)
 
   // message from my api if saving fails
   const [error, setError] = useState<string | null>(null)
+     useEffect(() => {
+    // only when the form opens, not when the popup itself opens
+    if (rating) {
+      onResize()
+    }
+  }, [rating, onResize])
 
   // sends the place to my api, ratings and notes only come with visited
   const save = (status: RestaurantStatus, r?: Rating) => {

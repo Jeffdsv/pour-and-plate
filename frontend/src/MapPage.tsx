@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Restaurant } from './types'
@@ -24,6 +24,8 @@ const POPUP_OPTIONS = {
   closeButton: false,
   closeOnClick: false,
   autoClose: false,
+
+  autoPanPadding: [24, 24] as [number, number],
 }
 
 // the round bubble with a number that replaces a group of red pins
@@ -77,6 +79,26 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
   // the clicked pin, only one of these is set at a time
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
+
+  // points at the open popup, so we can ask leaflet to measure it again
+  const popupRef = useRef<L.Popup>(null)
+
+  // when the popup changes size, update moves the map so the whole popup fits
+  const refreshPopup = useCallback(() => {
+    popupRef.current?.update()
+  }, [])
+
+  // the popup position as one fixed array per selected pin
+  // a new array on every redraw would make leaflet reopen the popup and stop it sliding into view
+  const placePosition = useMemo<[number, number] | null>(
+    () => (selectedPlace ? [selectedPlace.latitude, selectedPlace.longitude] : null),
+    [selectedPlace],
+  )
+  const restaurantPosition = useMemo<[number, number] | null>(
+    () => (selectedRestaurant ? [selectedRestaurant.latitude, selectedRestaurant.longitude] : null),
+    [selectedRestaurant],
+  )
+  
 
   // loads my restaurants, or a friends restaurants when looking at their map
   useEffect(() => {
@@ -134,8 +156,8 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
   const unsaved = readOnly ? [] : places.filter((p) => !savedIds.has(p.id))
 
   return (
-        <MapContainer center={STOCKHOLM} zoom={15} maxZoom={19} className="map">
-            {/* the clean vector map background */}
+           <MapContainer center={STOCKHOLM} zoom={15} maxZoom={19} fadeAnimation={false} className="map">
+      {/* the clean vector map background */}
       <VectorBaseMap />
 
       <VisibleAreaWatcher onChange={loadArea} />
@@ -169,20 +191,21 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
       ))}
 
       {/* popup for a red pin */}
-      {selectedPlace && (
-        <Popup position={[selectedPlace.latitude, selectedPlace.longitude]} {...POPUP_OPTIONS}>
+            {selectedPlace && placePosition && (
+        <Popup ref={popupRef} position={placePosition} {...POPUP_OPTIONS}>
           <PlacePopup
             key={selectedPlace.id}
             place={selectedPlace}
             onSaved={handleSaved}
             onClose={closePopups}
+            onResize={refreshPopup}
           />
         </Popup>
       )}
 
       {/* popup for a saved pin */}
-      {selectedRestaurant && (
-        <Popup position={[selectedRestaurant.latitude, selectedRestaurant.longitude]} {...POPUP_OPTIONS}>
+            {selectedRestaurant && restaurantPosition && (
+        <Popup ref={popupRef} position={restaurantPosition} {...POPUP_OPTIONS}>
           <RestaurantPopup
             key={selectedRestaurant.id}
             restaurant={selectedRestaurant}
@@ -190,6 +213,7 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
             onSaved={handleSaved}
             onRemoved={handleRemoved}
             onClose={closePopups}
+            onResize={refreshPopup}
           />
         </Popup>
       )}

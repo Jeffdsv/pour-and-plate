@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Restaurant } from './types'
 import { deleteRestaurant, saveRestaurant } from './restaurants'
 import RatingForm, { type Rating } from './RatingForm'
@@ -13,18 +13,26 @@ export default function RestaurantPopup({
   onSaved,
   onRemoved,
   onClose,
+  onResize,
 }: {
   restaurant: Restaurant
   readOnly: boolean
   onSaved: (r: Restaurant) => void
   onRemoved: (id: number) => void
   onClose: () => void
+  onResize: () => void
 }) {
   // true shows the rating form instead of the info
   const [editing, setEditing] = useState(false)
 
   // message from my api if something fails
   const [error, setError] = useState<string | null>(null)
+     useEffect(() => {
+    // only when the form opens, not when the popup itself opens
+    if (editing) {
+      onResize()
+    }
+  }, [editing, onResize])
 
   const r = restaurant
 
