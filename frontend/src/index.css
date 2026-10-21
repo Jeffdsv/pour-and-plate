@@ -575,3 +575,102 @@ textarea {
 .place-popup .pill {
   white-space: nowrap;
 }
+
+/* rating form inside the popup */
+.rating-form {
+  margin-top: 8px;
+}
+
+.slider span {
+  width: 90px;
+  color: var(--muted);
+}
+
+/* accent color paints the slider in our blue instead of the browser default */
+.slider input[type='range'] {
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+
+.slider strong {
+  width: 20px;
+  text-align: right;
+}
+
+.rating-form .notes {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid #D1D5DB;
+  border-radius: 12px;
+}
+
+.rating-form .notes:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+/* invite button fills the bottom of the panel */
+.invite-button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 999px;
+  background: var(--blue);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.invite-button:hover {
+  background: #2A4D7A;
+}
+
+/* in the panel the link box sits under the button instead of floating */
+.panel-footer .invite-box {
+  position: relative;
+  top: auto;
+  flex-wrap: wrap;
+  width: auto;
+  margin-top: 10px;
+  padding: 28px 12px 12px;
+  border: none;
+  border-radius: 12px;
+  background: var(--blue-light);
+  box-shadow: none;
+}
+
+.panel-footer .invite-box input {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+}
+
+.panel-footer .invite-box span {
+  width: 100%;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.panel-footer .invite-box .close-button-inline {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+}
+
+.copy-button {
+  padding: 8px 14px;
+  border: 1px solid var(--blue);
+  border-radius: 999px;
+  background: white;
+  color: var(--blue);
+  font-weight: 600;
+  cursor: pointer;
+}
+/* every label gets the same width so all sliders line up */
+.slider span {
+  flex-shrink: 0;
+  width: 100px;
+}

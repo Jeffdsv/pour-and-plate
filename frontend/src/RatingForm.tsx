@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Stars from './Stars'
 
 // what the form gives back when you press save
 export interface Rating {
@@ -46,12 +47,17 @@ export default function RatingForm({
   // live preview of my score while moving the sliders
   const score = ((food + atmosphere + value) / 3).toFixed(1)
 
-  return (
-    <>
+    return (
+    <div className="rating-form">
       <Slider label="Food" value={food} onChange={setFood} />
       <Slider label="Atmosphere" value={atmosphere} onChange={setAtmosphere} />
       <Slider label="Value" value={value} onChange={setValue} />
-      <p>My score: <strong>{score}</strong></p>
+
+      {/* the same score box and stars as the popup, updates while you drag */}
+      <div className="score-row">
+        <span className="score-box">{score}</span>
+        <Stars score={Number(score)} />
+      </div>
 
       <textarea
         className="notes"
@@ -62,9 +68,9 @@ export default function RatingForm({
       />
 
       <div className="buttons">
-        <button onClick={onCancel}>Back</button>
-        <button onClick={() => onSave({ food, atmosphere, value, notes })}>Save</button>
+        <button className="pill" onClick={onCancel}>Back</button>
+        <button className="pill primary" onClick={() => onSave({ food, atmosphere, value, notes })}>Save</button>
       </div>
-    </>
+    </div>
   )
 }

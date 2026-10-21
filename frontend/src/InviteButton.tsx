@@ -15,6 +15,7 @@ export default function InviteButton() {
       .catch((e: Error) => setError(e.message))
   }
 
+  
   // copies the link so it can be pasted into a message
   const copy = () => {
     if (invite === null) {
@@ -28,14 +29,14 @@ export default function InviteButton() {
     ? new Date(invite.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     : ''
 
-  return (
+    return (
     <div className="invite">
-      <button onClick={create}>Invite friend</button>
+      <button className="invite-button" onClick={create}>Invite friend</button>
 
       {invite && (
         <div className="invite-box">
           <input readOnly value={invite.link} onFocus={(e) => e.target.select()} />
-          <button onClick={copy}>{copied ? 'Copied' : 'Copy'}</button>
+          <button className="copy-button" onClick={copy}>{copied ? 'Copied' : 'Copy'}</button>
           <span>Works once, until {expires}</span>
           <button className="close-button-inline" onClick={() => setInvite(null)} aria-label="Close">×</button>
         </div>
