@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import type { Restaurant } from './types'
 import { fetchPlaces, type Bounds, type Place } from './places'
 import { fetchRestaurants } from './restaurants'
+import { fetchRestaurantsOf } from './people'
 import PlacePopup from './PlacePopup'
 import RestaurantPopup from './RestaurantPopup'
 import { ICONS } from './icons'
@@ -22,7 +23,7 @@ const POPUP_OPTIONS = {
   autoClose: false,
 }
 
-// sits inside the map and tells App which area is visible after every move or zoom
+// sits inside the map and tells MapPage which area is visible after every move or zoom
 function VisibleAreaWatcher({ onChange }: { onChange: (bounds: Bounds | null) => void }) {
   const map = useMap()
 
@@ -50,23 +51,25 @@ function VisibleAreaWatcher({ onChange }: { onChange: (bounds: Bounds | null) =>
   return null
 }
 
-function MapPage() {
-  // my saved restaurants from my own api
+// shows my map, or a friends map read only when viewUserId is set
+function MapPage({ viewUserId }: { viewUserId: number | null }) {
+  // the saved restaurants shown on the map, mine or a friends
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
 
-  // all places in the visible area, also from my own api
+  // all places in the visible area, from my own api
   const [places, setPlaces] = useState<Place[]>([])
 
   // the clicked pin, only one of these is set at a time
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
 
-  // runs once when the page loads and fetches my restaurants
+  // loads my restaurants, or a friends restaurants when looking at their map
   useEffect(() => {
-    fetchRestaurants()
+    const load = viewUserId === null ? fetchRestaurants() : fetchRestaurantsOf(viewUserId)
+    load
       .then(setRestaurants)
       .catch((error) => console.error('could not load restaurants', error))
-  }, [])
+  }, [viewUserId])
 
   // called by VisibleAreaWatcher every time the map stops moving
   // useCallback keeps it the same function between redraws, so the watcher doesnt restart
@@ -80,7 +83,7 @@ function MapPage() {
       .catch((error) => console.error('could not load places', error))
   }, [])
 
-  // clicking a red pin closes any open popup for my own pins, and the other way round
+  // clicking a red pin closes any open popup for saved pins, and the other way round
   const selectPlace = (p: Place) => {
     setSelectedRestaurant(null)
     setSelectedPlace(p)
@@ -96,21 +99,24 @@ function MapPage() {
     setSelectedRestaurant(null)
   }
 
-  // a saved or changed restaurant replaces the old one in my list
+  // a saved or changed restaurant replaces the old one in the list
   const handleSaved = (saved: Restaurant) => {
     setRestaurants((current) => [...current.filter((r) => r.id !== saved.id), saved])
     closePopups()
   }
 
-  // a removed restaurant disappears from my list and turns back into a red pin
+  // a removed restaurant disappears from the list and turns back into a red pin
   const handleRemoved = (id: number) => {
     setRestaurants((current) => current.filter((r) => r.id !== id))
     closePopups()
   }
 
-  // skip places i have already saved, so they are not drawn twice
+  // on a friends map i only look, so no red pins and no editing
+  const readOnly = viewUserId !== null
+
+  // skip places already saved, so they are not drawn twice
   const savedIds = new Set(restaurants.map((r) => r.placeId))
-  const unsaved = places.filter((p) => !savedIds.has(p.id))
+  const unsaved = readOnly ? [] : places.filter((p) => !savedIds.has(p.id))
 
   return (
     <MapContainer center={STOCKHOLM} zoom={15} className="map">
@@ -122,7 +128,7 @@ function MapPage() {
 
       <VisibleAreaWatcher onChange={loadArea} />
 
-      {/* red pins first, so my own pins are drawn on top */}
+      {/* red pins first, so saved pins are drawn on top */}
       {unsaved.map((p) => (
         <Marker
           key={p.id}
@@ -132,7 +138,7 @@ function MapPage() {
         />
       ))}
 
-      {/* my saved restaurants, orange with a fork or green with a smiley */}
+      {/* saved restaurants, orange with a fork or green with a smiley */}
       {restaurants.map((r) => (
         <Marker
           key={r.id}
@@ -154,12 +160,13 @@ function MapPage() {
         </Popup>
       )}
 
-      {/* popup for one of my own pins */}
+      {/* popup for a saved pin */}
       {selectedRestaurant && (
         <Popup position={[selectedRestaurant.latitude, selectedRestaurant.longitude]} {...POPUP_OPTIONS}>
           <RestaurantPopup
             key={selectedRestaurant.id}
             restaurant={selectedRestaurant}
+            readOnly={readOnly}
             onSaved={handleSaved}
             onRemoved={handleRemoved}
             onClose={closePopups}

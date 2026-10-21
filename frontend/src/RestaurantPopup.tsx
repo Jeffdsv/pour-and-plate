@@ -3,14 +3,17 @@ import type { Restaurant } from './types'
 import { deleteRestaurant, saveRestaurant } from './restaurants'
 import RatingForm, { type Rating } from './RatingForm'
 
-// what you see when you click one of my own pins, green or orange
+// what you see when you click a saved pin, green or orange
+// on a friends map it is read only, so the buttons are hidden
 export default function RestaurantPopup({
   restaurant,
+  readOnly,
   onSaved,
   onRemoved,
   onClose,
 }: {
   restaurant: Restaurant
+  readOnly: boolean
   onSaved: (r: Restaurant) => void
   onRemoved: (id: number) => void
   onClose: () => void
@@ -68,7 +71,7 @@ export default function RestaurantPopup({
 
       {editing ? (
         <RatingForm
-          // start from my current ratings, or the middle if it was on the wishlist
+          // start from the current ratings, or the middle if it was on the wishlist
           initial={{
             food: r.foodRating ?? 5,
             atmosphere: r.atmosphereRating ?? 5,
@@ -85,20 +88,23 @@ export default function RestaurantPopup({
               <p>
                 Food {r.foodRating} · Atmosphere {r.atmosphereRating} · Value {r.valueRating}
               </p>
-              <p>My score: <strong>{r.myScore}</strong></p>
+              <p>Score: <strong>{r.myScore}</strong></p>
             </>
           ) : (
-            <p>On your wishlist</p>
+            <p>On the wishlist</p>
           )}
 
           {r.notes && <p className="notes-text">{r.notes}</p>}
 
-          <div className="buttons">
-            <button onClick={() => setEditing(true)}>
-              {r.status === 'VISITED' ? 'Change rating' : 'Visited'}
-            </button>
-            <button className="danger" onClick={remove}>Remove</button>
-          </div>
+          {/* only on my own map, a friends map is read only */}
+          {!readOnly && (
+            <div className="buttons">
+              <button onClick={() => setEditing(true)}>
+                {r.status === 'VISITED' ? 'Change rating' : 'Visited'}
+              </button>
+              <button className="danger" onClick={remove}>Remove</button>
+            </div>
+          )}
         </>
       )}
 
