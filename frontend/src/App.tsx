@@ -1,26 +1,33 @@
 import { useEffect, useState } from 'react'
 import { fetchMe, logout } from './auth'
 import { fetchUsers } from './people'
+import type { Person } from './people'
 import type { User } from './types'
 import LoginPage from './LoginPage'
 import SignupPage from './SignupPage'
 import MapPage from './MapPage'
 import EveryonePage from './EveryonePage'
-import InviteButton from './InviteButton'
+import SidePanel from './SidePanel'
 
 // which map is shown: my own, everyone combined, or one friend by their id
 type View = 'me' | 'everyone' | number
+
+// below this width we count it as a phone
+const PHONE_WIDTH = 768
 
 // decides what to show: the sign up page, the login page or a map
 function App() {
   // undefined while checking, null when nobody is logged in, a user when logged in
   const [user, setUser] = useState<User | null | undefined>(undefined)
 
-  // everyone with an account, for the dropdown
-  const [users, setUsers] = useState<User[]>([])
+  // everyone with an account and their counts, for the side panel
+  const [people, setPeople] = useState<Person[]>([])
 
   // the map that is shown right now
   const [view, setView] = useState<View>('me')
+
+  // the panel starts open on a computer and hidden on a phone
+  const [panelOpen, setPanelOpen] = useState(() => window.innerWidth > PHONE_WIDTH)
 
   // on page load, ask my api if this browser is already logged in through its session cookie
   useEffect(() => {
@@ -33,7 +40,7 @@ function App() {
   useEffect(() => {
     if (user) {
       fetchUsers()
-        .then(setUsers)
+        .then(setPeople)
         .catch((error) => console.error('could not load users', error))
     }
   }, [user])
@@ -43,6 +50,14 @@ function App() {
       setView('me')
       setUser(null)
     })
+  }
+
+  // on a phone the panel covers the map, so close it after picking someone
+  const handleSelect = (next: View) => {
+    setView(next)
+    if (window.innerWidth <= PHONE_WIDTH) {
+      setPanelOpen(false)
+    }
   }
 
   // an invite link looks like /invite/abc123, then show the sign up page instead of everything else
@@ -62,37 +77,32 @@ function App() {
   return (
     <div className="app">
       <header className="top-bar">
+        {/* opens and closes the side panel */}
+        <button className="menu-button" onClick={() => setPanelOpen(!panelOpen)} aria-label="Show maps">
+          ☰
+        </button>
         <strong>Pour &amp; Plate</strong>
-        {/* only the admin can invite friends */}
-        {user.role === 'ADMIN' && <InviteButton />}
-
-        {/* choose which map to look at */}
-        <select
-          value={String(view)}
-          onChange={(e) => {
-            const value = e.target.value
-            setView(value === 'me' || value === 'everyone' ? value : Number(value))
-          }}
-        >
-          <option value="me">My map</option>
-          <option value="everyone">Everyone</option>
-          {users
-            .filter((u) => u.id !== user.id)
-            .map((u) => (
-              <option key={u.id} value={u.id}>{u.displayName}</option>
-            ))}
-        </select>
-
         <span className="user-name">{user.displayName}</span>
         <button onClick={handleLogout}>Log out</button>
       </header>
 
-      {/* everyone gets its own page, my map and friends maps share MapPage */}
-      {view === 'everyone' ? (
-        <EveryonePage />
-      ) : (
-        <MapPage key={String(view)} viewUserId={view === 'me' ? null : view} />
-      )}
+      <div className="main">
+        <SidePanel
+          me={user}
+          people={people}
+          view={view}
+          open={panelOpen}
+          onSelect={handleSelect}
+          onClose={() => setPanelOpen(false)}
+        />
+
+        {/* everyone gets its own page, my map and friends maps share MapPage */}
+        {view === 'everyone' ? (
+          <EveryonePage />
+        ) : (
+          <MapPage key={String(view)} viewUserId={view === 'me' ? null : view} />
+        )}
+      </div>
     </div>
   )
 }

@@ -1,7 +1,7 @@
-import type { Restaurant, User } from './types'
+import type { Restaurant } from './types'
 
 // everyone who has an account, sorted by name
-export async function fetchUsers(): Promise<User[]> {
+export async function fetchUsers(): Promise<Person[]> {
   const response = await fetch('/api/users')
   if (!response.ok) {
     throw new Error(`users api answered ${response.status}`)
@@ -38,4 +38,14 @@ export async function fetchSummary(): Promise<PlaceSummary[]> {
     throw new Error(`summary answered ${response.status}`)
   }
   return response.json()
+}
+
+// a user plus their counts, what GET /api/users gives back now
+export interface Person {
+  id: number
+  username: string
+  displayName: string
+  role: string
+  visitedCount: number
+  wantCount: number
 }

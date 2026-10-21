@@ -19,6 +19,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -163,6 +164,35 @@ class RestaurantApiIntegrationTest {
 
         assertThat(response.statusCode()).isEqualTo(403);
         assertThat(repository.count()).isEqualTo(1);
+    }
+
+    // the user list should count visited and want to go per person
+    @Test
+    void userList_countsVisitedAndWantPerUser() throws Exception {
+        // erik wants to go somewhere, i have visited one place
+        repository.save(Restaurant.wantToVisit(otherUser(), "Eriks place", LAT, LON));
+        post("""
+                {
+                  "placeId": "node/1", "name": "Ekstedt",
+                  "latitude": 59.33, "longitude": 18.06,
+                  "status": "VISITED",
+                  "foodRating": 9, "atmosphereRating": 8, "valueRating": 6
+                }
+                """);
+
+        HttpResponse<String> response = get("/api/users");
+        assertThat(response.statusCode()).isEqualTo(200);
+
+        // pick out one person from the json list by username
+        List<Integer> myVisited = JsonPath.read(response.body(), "$[?(@.username == 'svent')].visitedCount");
+        List<Integer> myWant = JsonPath.read(response.body(), "$[?(@.username == 'svent')].wantCount");
+        List<Integer> eriksVisited = JsonPath.read(response.body(), "$[?(@.username == 'erik')].visitedCount");
+        List<Integer> eriksWant = JsonPath.read(response.body(), "$[?(@.username == 'erik')].wantCount");
+
+        assertThat(myVisited).containsExactly(1);
+        assertThat(myWant).containsExactly(0);
+        assertThat(eriksVisited).containsExactly(0);
+        assertThat(eriksWant).containsExactly(1);
     }
 
     // helpers
