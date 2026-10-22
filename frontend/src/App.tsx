@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router'
 import { fetchMe, logout } from './auth'
 import { fetchUsers } from './people'
 import type { Person } from './people'
@@ -8,6 +9,8 @@ import SignupPage from './SignupPage'
 import MapPage from './MapPage'
 import EveryonePage from './EveryonePage'
 import SidePanel from './SidePanel'
+import HomePage from './HomePage'
+import ComingSoonPage from './ComingSoonPage'
 
 // which map is shown: my own, everyone combined, or one friend by their id
 type View = 'me' | 'everyone' | number
@@ -15,7 +18,7 @@ type View = 'me' | 'everyone' | number
 // below this width we count it as a phone
 const PHONE_WIDTH = 768
 
-// decides what to show: the sign up page, the login page or a map
+// decides what to show: the sign up page, the login page or the app with its pages
 function App() {
   // undefined while checking, null when nobody is logged in, a user when logged in
   const [user, setUser] = useState<User | null | undefined>(undefined)
@@ -29,6 +32,10 @@ function App() {
   // the panel starts open on a computer and hidden on a phone
   const [panelOpen, setPanelOpen] = useState(() => window.innerWidth > PHONE_WIDTH)
 
+  // the current address, so the top bar knows if we are on the map
+  const location = useLocation()
+  const onMap = location.pathname === '/map'
+
   // on page load, ask my api if this browser is already logged in through its session cookie
   useEffect(() => {
     fetchMe()
@@ -36,7 +43,6 @@ function App() {
       .catch(() => setUser(null))
   }, [])
 
-  
   // if any api call says 401, my session is gone, so show the login page again
   useEffect(() => {
     const handleExpired = () => {
@@ -90,32 +96,56 @@ function App() {
   return (
     <div className="app">
       <header className="top-bar">
-        {/* opens and closes the side panel */}
-        <button className="menu-button" onClick={() => setPanelOpen(!panelOpen)} aria-label="Show maps">
-          ☰
-        </button>
-        <strong>Pour &amp; Plate</strong>
+        {/* the side panel only exists on the map page */}
+        {onMap && (
+          <button className="menu-button" onClick={() => setPanelOpen(!panelOpen)} aria-label="Show maps">
+            ☰
+          </button>
+        )}
+        {/* the logo always takes you back to the start page */}
+        <Link to="/" className="logo">Pour &amp; Plate</Link>
         <span className="user-name">{user.displayName}</span>
         <button onClick={handleLogout}>Log out</button>
       </header>
 
-      <div className="main">
-        <SidePanel
-          me={user}
-          people={people}
-          view={view}
-          open={panelOpen}
-          onSelect={handleSelect}
-          onClose={() => setPanelOpen(false)}
+      <Routes>
+        <Route path="/" element={<HomePage name={user.displayName} />} />
+
+        <Route
+          path="/map"
+          element={
+            <div className="main">
+              <SidePanel
+                me={user}
+                people={people}
+                view={view}
+                open={panelOpen}
+                onSelect={handleSelect}
+                onClose={() => setPanelOpen(false)}
+              />
+
+              {/* everyone gets its own page, my map and friends maps share MapPage */}
+              {view === 'everyone' ? (
+                <EveryonePage />
+              ) : (
+                <MapPage key={String(view)} viewUserId={view === 'me' ? null : view} />
+              )}
+            </div>
+          }
         />
 
-        {/* everyone gets its own page, my map and friends maps share MapPage */}
-        {view === 'everyone' ? (
-          <EveryonePage />
-        ) : (
-          <MapPage key={String(view)} viewUserId={view === 'me' ? null : view} />
-        )}
-      </div>
+        <Route
+          path="/wine"
+          element={<ComingSoonPage icon="🍷" title="Wine" text="Grapes, and which wine goes with which meal." />}
+        />
+        <Route
+          path="/beer"
+          element={<ComingSoonPage icon="🍺" title="Beer" text="Tips, beer styles and my own brewing notes." />}
+        />
+
+        {/* any other address goes back to the start page */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </div>
   )
 }

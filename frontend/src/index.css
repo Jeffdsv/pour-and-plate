@@ -722,3 +722,94 @@ a.google-toggle {
   display: inline-block;
   text-decoration: none;
 }
+
+/* ========== pages ========== */
+
+/* the logo in the top bar is a link back to the start page */
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--blue);
+  text-decoration: none;
+}
+
+/* a normal page under the top bar, scrolls by itself if it is long */
+.page {
+  flex: 1;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 32px 16px;
+  background: #F7F8FA;
+}
+
+.home-title {
+  margin: 8px 0 24px;
+  font-size: 24px;
+  color: var(--blue);
+  text-align: center;
+}
+
+/* as many cards per row as fit, at least 220px wide, so phones get one per row */
+.home-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.home-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 20px;
+  border-radius: var(--radius);
+  background: white;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  color: var(--text);
+  text-align: center;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* the card lifts a little when you hover it */
+.home-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.home-icon {
+  font-size: 44px;
+}
+
+.home-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.home-card-text {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.coming-soon {
+  text-align: center;
+}
+
+.coming-soon h1 {
+  color: var(--blue);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.back-link {
+  display: inline-block;
+  margin-top: 16px;
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: none;
+}
