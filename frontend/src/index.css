@@ -716,3 +716,9 @@ textarea {
   border: 0;
   border-radius: 12px;
 }
+
+/* the phone version is a link, make it look like the button */
+a.google-toggle {
+  display: inline-block;
+  text-decoration: none;
+}
