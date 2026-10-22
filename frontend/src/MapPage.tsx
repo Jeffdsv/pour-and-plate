@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Restaurant } from './types'
-import { fetchPlaces, type Bounds, type Place } from './places'
+import { fetchPlaces, type Bounds, type Place, type PlaceKind } from './places'
+import KindFilter from './KindFilter'
 import { fetchRestaurants } from './restaurants'
 import { fetchRestaurantsOf } from './people'
 import PlacePopup from './PlacePopup'
@@ -24,9 +25,8 @@ const POPUP_OPTIONS = {
   closeButton: false,
   closeOnClick: false,
   autoClose: false,
-
+  // space between the popup and the edge of the map when it slides into view
   autoPanPadding: [24, 24] as [number, number],
-
   // leaflet stops popups at 300px wide, the google box needs more room
   maxWidth: 460,
 }
@@ -79,6 +79,13 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
   // all places in the visible area, from my own api
   const [places, setPlaces] = useState<Place[]>([])
 
+  // the visible area, VisibleAreaWatcher sets it every time the map stops moving
+  const [bounds, setBounds] = useState<Bounds | null>(null)
+
+  // which kinds of places to show, all of them from the start
+    // which kinds of places to show, none from the start so the map is clean until you pick something
+  const [kinds, setKinds] = useState<PlaceKind[]>([])
+
   // the clicked pin, only one of these is set at a time
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
@@ -101,7 +108,6 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
     () => (selectedRestaurant ? [selectedRestaurant.latitude, selectedRestaurant.longitude] : null),
     [selectedRestaurant],
   )
-  
 
   // loads my restaurants, or a friends restaurants when looking at their map
   useEffect(() => {
@@ -111,17 +117,28 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
       .catch((error) => console.error('could not load restaurants', error))
   }, [viewUserId])
 
-  // called by VisibleAreaWatcher every time the map stops moving
-  // useCallback keeps it the same function between redraws, so the watcher doesnt restart
-  const loadArea = useCallback((bounds: Bounds | null) => {
-    if (bounds === null) {
-      setPlaces([])
+  // load places again when the map moves or the filter changes
+  useEffect(() => {
+    // zoomed out too far, or every pill turned off, nothing to ask for
+    if (bounds === null || kinds.length === 0) {
       return
     }
-    fetchPlaces(bounds)
-      .then(setPlaces)
+
+    // if the map moves again before the answer comes, the old answer is ignored
+    let cancelled = false
+    fetchPlaces(bounds, kinds)
+      .then((result) => {
+        if (!cancelled) {
+          setPlaces(result)
+        }
+      })
       .catch((error) => console.error('could not load places', error))
-  }, [])
+
+    // cleanup runs before the next fetch, it marks this one as out of date
+    return () => {
+      cancelled = true
+    }
+  }, [bounds, kinds])
 
   // clicking a red pin closes any open popup for saved pins, and the other way round
   const selectPlace = (p: Place) => {
@@ -156,71 +173,79 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
 
   // skip places already saved, so they are not drawn twice
   const savedIds = new Set(restaurants.map((r) => r.placeId))
-  const unsaved = readOnly ? [] : places.filter((p) => !savedIds.has(p.id))
+
+  // nothing to show when zoomed out or when every pill is off
+  const visiblePlaces = bounds === null || kinds.length === 0 ? [] : places
+  const unsaved = readOnly ? [] : visiblePlaces.filter((p) => !savedIds.has(p.id))
 
   return (
-           <MapContainer center={STOCKHOLM} zoom={15} maxZoom={19} fadeAnimation={false} className="map">
-      {/* the clean vector map background */}
-      <VectorBaseMap />
+    <>
+      {/* the filter pills, only on my own map since friends maps have no red pins */}
+      {!readOnly && <KindFilter selected={kinds} onChange={setKinds} />}
 
-      <VisibleAreaWatcher onChange={loadArea} />
+      <MapContainer center={STOCKHOLM} zoom={15} maxZoom={19} fadeAnimation={false} className="map">
+        {/* the clean vector map background */}
+        <VectorBaseMap />
 
-      {/* red pins grouped into number bubbles that split up when you zoom in */}
-      <MarkerClusterGroup
-        chunkedLoading
-        maxClusterRadius={90}
-        showCoverageOnHover={false}
-        disableClusteringAtZoom={18}
-        iconCreateFunction={clusterIcon}
-      >
-        {unsaved.map((p) => (
+        <VisibleAreaWatcher onChange={setBounds} />
+
+        {/* red pins grouped into number bubbles that split up when you zoom in */}
+        <MarkerClusterGroup
+          chunkedLoading
+          maxClusterRadius={90}
+          showCoverageOnHover={false}
+          disableClusteringAtZoom={18}
+          iconCreateFunction={clusterIcon}
+        >
+          {unsaved.map((p) => (
+            <Marker
+              key={p.id}
+              position={[p.latitude, p.longitude]}
+              icon={ICONS.UNSAVED}
+              eventHandlers={{ click: () => selectPlace(p) }}
+            />
+          ))}
+        </MarkerClusterGroup>
+
+        {/* saved restaurants, orange with a fork or green with a smiley */}
+        {restaurants.map((r) => (
           <Marker
-            key={p.id}
-            position={[p.latitude, p.longitude]}
-            icon={ICONS.UNSAVED}
-            eventHandlers={{ click: () => selectPlace(p) }}
+            key={r.id}
+            position={[r.latitude, r.longitude]}
+            icon={ICONS[r.status]}
+            eventHandlers={{ click: () => selectRestaurant(r) }}
           />
         ))}
-      </MarkerClusterGroup>
 
-      {/* saved restaurants, orange with a fork or green with a smiley */}
-      {restaurants.map((r) => (
-        <Marker
-          key={r.id}
-          position={[r.latitude, r.longitude]}
-          icon={ICONS[r.status]}
-          eventHandlers={{ click: () => selectRestaurant(r) }}
-        />
-      ))}
+        {/* popup for a red pin */}
+        {selectedPlace && placePosition && (
+          <Popup ref={popupRef} position={placePosition} {...POPUP_OPTIONS}>
+            <PlacePopup
+              key={selectedPlace.id}
+              place={selectedPlace}
+              onSaved={handleSaved}
+              onClose={closePopups}
+              onResize={refreshPopup}
+            />
+          </Popup>
+        )}
 
-      {/* popup for a red pin */}
-            {selectedPlace && placePosition && (
-        <Popup ref={popupRef} position={placePosition} {...POPUP_OPTIONS}>
-          <PlacePopup
-            key={selectedPlace.id}
-            place={selectedPlace}
-            onSaved={handleSaved}
-            onClose={closePopups}
-            onResize={refreshPopup}
-          />
-        </Popup>
-      )}
-
-      {/* popup for a saved pin */}
-            {selectedRestaurant && restaurantPosition && (
-        <Popup ref={popupRef} position={restaurantPosition} {...POPUP_OPTIONS}>
-          <RestaurantPopup
-            key={selectedRestaurant.id}
-            restaurant={selectedRestaurant}
-            readOnly={readOnly}
-            onSaved={handleSaved}
-            onRemoved={handleRemoved}
-            onClose={closePopups}
-            onResize={refreshPopup}
-          />
-        </Popup>
-      )}
-    </MapContainer>
+        {/* popup for a saved pin */}
+        {selectedRestaurant && restaurantPosition && (
+          <Popup ref={popupRef} position={restaurantPosition} {...POPUP_OPTIONS}>
+            <RestaurantPopup
+              key={selectedRestaurant.id}
+              restaurant={selectedRestaurant}
+              readOnly={readOnly}
+              onSaved={handleSaved}
+              onRemoved={handleRemoved}
+              onClose={closePopups}
+              onResize={refreshPopup}
+            />
+          </Popup>
+        )}
+      </MapContainer>
+    </>
   )
 }
 

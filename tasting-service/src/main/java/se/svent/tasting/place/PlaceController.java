@@ -22,7 +22,8 @@ public class PlaceController {
     public List<PlaceResponse> findInArea(@RequestParam double south,
                                           @RequestParam double west,
                                           @RequestParam double north,
-                                          @RequestParam double east) {
-        return service.findInArea(south, west, north, east);
+                                          @RequestParam double east,
+                                          @RequestParam(required = false) List<PlaceKind> kinds) {
+        return service.findInArea(south, west, north, east, kinds);
     }
 }

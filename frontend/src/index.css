@@ -813,3 +813,39 @@ a.google-toggle {
   font-weight: 600;
   text-decoration: none;
 }
+
+/* ========== kind filter ========== */
+
+/* a row of pills floating at the top middle of the map, scrolls sideways on a phone */
+.kind-filter {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+  padding: 4px;
+  overflow-x: auto;
+}
+
+.kind-pill {
+  padding: 8px 14px;
+  border: 1px solid #D1D5DB;
+  border-radius: 999px;
+  background: white;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* a kind that is on is filled blue */
+.kind-pill.active {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: white;
+}

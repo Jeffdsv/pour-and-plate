@@ -11,14 +11,15 @@ public record PlaceResponse(
         String city,
         BigDecimal latitude,
         BigDecimal longitude,
-        String website
+        String website,
+        String kind
 ) {
 
     // turns a Place from the database into a response
     public static PlaceResponse from(Place p) {
         return new PlaceResponse(
                 p.getId(), p.getName(), p.getCategory(), p.getAddress(), p.getCity(),
-                p.getLatitude(), p.getLongitude(), p.getWebsite()
+                p.getLatitude(), p.getLongitude(), p.getWebsite(), p.getKind()
         );
     }
 }

@@ -21,7 +21,7 @@ public class PlaceService {
     }
 
     @Transactional(readOnly = true)
-    public List<PlaceResponse> findInArea(double south, double west, double north, double east) {
+    public List<PlaceResponse> findInArea(double south, double west, double north, double east, List<PlaceKind> kinds) {
         // the edges must make sense, otherwise its a bad request
         if (south >= north || west >= east) {
             throw new IllegalArgumentException("south must be below north and west must be left of east");
@@ -30,11 +30,15 @@ public class PlaceService {
             throw new IllegalArgumentException("area is too big, zoom in");
         }
 
+        // no kinds chosen means all of them, so old calls without the parameter still work
+        List<PlaceKind> chosen = (kinds == null || kinds.isEmpty()) ? List.of(PlaceKind.values()) : kinds;
+        List<String> kindNames = chosen.stream().map(Enum::name).toList();
+
         // the middle of the visible area, places closest to it come first
         double centerLat = (south + north) / 2;
         double centerLon = (west + east) / 2;
 
-        return repository.findInArea(south, west, north, east, centerLat, centerLon, MAX_RESULTS)
+        return repository.findInArea(south, west, north, east, centerLat, centerLon, kindNames, MAX_RESULTS)
                 .stream()
                 .map(PlaceResponse::from)
                 .toList();

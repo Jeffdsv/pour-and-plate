@@ -38,6 +38,10 @@ public class Place {
     private String website;
     private String phone;
 
+    // RESTAURANT, CAFE, WINE, BEER or BAR, postgres works it out from the category (see V11)
+    @Column(insertable = false, updatable = false)
+    private String kind;
+
     @Column(name = "imported_at", nullable = false)
     private Instant importedAt;
 
@@ -55,4 +59,5 @@ public class Place {
     public String getWebsite() { return website; }
     public String getPhone() { return phone; }
     public Instant getImportedAt() { return importedAt; }
+    public String getKind() { return kind; }
 }
