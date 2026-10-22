@@ -19,13 +19,22 @@ spring:
   flyway:
     enabled: true          # runs scripts in src/main/resources/db/migration on startup
 
+  # login sessions are stored in postgres, so a restart doesnt log anyone out
+  session:
+    jdbc:
+      # flyway creates the tables in V10, spring should not try to do it itself
+      initialize-schema: never
+
 server:
   port: 8081               # 8080 is kept free for the API gateway later
   servlet:
     session:
+      # stay logged in for two weeks, even if you close the browser
+      timeout: 14d
       cookie:
         http-only: true    # javascript in the page can never read the session cookie
-        same-site: lax     # the browser does not send it with requests from other websites              # 8080 is kept free for the API gateway later
+        same-site: lax     # the browser does not send it with requests from other websites
+        max-age: 14d       # the browser keeps the cookie for two weeks
 
 # Actuator: exposes /actuator/health so Docker/Kubernetes can check the app is alive
 management:
