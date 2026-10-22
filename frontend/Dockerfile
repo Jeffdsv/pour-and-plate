@@ -15,6 +15,7 @@ RUN npm run build
 
 # stage 2: nginx serves the finished files, no node needed anymore
 FROM nginx:stable-alpine
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+ENV BACKEND_URL=http://backend:8081
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
