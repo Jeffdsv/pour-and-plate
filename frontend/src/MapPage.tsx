@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import type { Restaurant } from './types'
 import { fetchPlaces, type Bounds, type Place, type PlaceKind } from './places'
 import KindFilter from './KindFilter'
+import SearchBox from './SearchBox'
 import { fetchRestaurants } from './restaurants'
 import { fetchRestaurantsOf } from './people'
 import PlacePopup from './PlacePopup'
@@ -71,6 +72,21 @@ function VisibleAreaWatcher({ onChange }: { onChange: (bounds: Bounds | null) =>
   return null
 }
 
+
+// sits inside the map and flies to a place when one is picked in the search
+function FlyToPlace({ place }: { place: Place | null }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (place) {
+      map.flyTo([place.latitude, place.longitude], 17, { duration: 1.2 })
+    }
+  }, [map, place])
+
+  // draws nothing, it only moves the map
+  return null
+}
+
 // shows my map, or a friends map read only when viewUserId is set
 function MapPage({ viewUserId }: { viewUserId: number | null }) {
   // the saved restaurants shown on the map, mine or a friends
@@ -89,6 +105,9 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
   // the clicked pin, only one of these is set at a time
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
+
+  // the place picked in the search, FlyToPlace moves the map there
+  const [searchedPlace, setSearchedPlace] = useState<Place | null>(null)
 
   // points at the open popup, so we can ask leaflet to measure it again
   const popupRef = useRef<L.Popup>(null)
@@ -156,6 +175,19 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
     setSelectedRestaurant(null)
   }
 
+  
+  // a place picked in the search: fly there and open its popup
+  // if i already saved it, open my saved version instead so i see my rating
+  const handlePick = (place: Place) => {
+    setSearchedPlace(place)
+    const saved = restaurants.find((r) => r.placeId === place.id)
+    if (saved) {
+      selectRestaurant(saved)
+    } else {
+      selectPlace(place)
+    }
+  }
+
   // a saved or changed restaurant replaces the old one in the list
   const handleSaved = (saved: Restaurant) => {
     setRestaurants((current) => [...current.filter((r) => r.id !== saved.id), saved])
@@ -176,18 +208,27 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
 
   // nothing to show when zoomed out or when every pill is off
   const visiblePlaces = bounds === null || kinds.length === 0 ? [] : places
-  const unsaved = readOnly ? [] : visiblePlaces.filter((p) => !savedIds.has(p.id))
+    // the searched place gets its own pin further down, so leave it out here to not draw it twice
+  const unsaved = readOnly
+    ? []
+    : visiblePlaces.filter((p) => !savedIds.has(p.id) && p.id !== searchedPlace?.id)
 
   return (
     <>
-      {/* the filter pills, only on my own map since friends maps have no red pins */}
-      {!readOnly && <KindFilter selected={kinds} onChange={setKinds} />}
+            {/* search and filter pills on top of the map, only on my own map */}
+      {!readOnly && (
+        <div className="map-top">
+          <SearchBox onPick={handlePick} />
+          <KindFilter selected={kinds} onChange={setKinds} />
+        </div>
+      )}
 
       <MapContainer center={STOCKHOLM} zoom={15} maxZoom={19} fadeAnimation={false} className="map">
         {/* the clean vector map background */}
         <VectorBaseMap />
 
         <VisibleAreaWatcher onChange={setBounds} />
+        <FlyToPlace place={searchedPlace} />
 
         {/* red pins grouped into number bubbles that split up when you zoom in */}
         <MarkerClusterGroup
@@ -216,6 +257,16 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
             eventHandlers={{ click: () => selectRestaurant(r) }}
           />
         ))}
+
+        
+        {/* the place picked in the search always gets its pin, even when its kind is filtered out */}
+        {searchedPlace && !savedIds.has(searchedPlace.id) && (
+          <Marker
+            position={[searchedPlace.latitude, searchedPlace.longitude]}
+            icon={ICONS.UNSAVED}
+            eventHandlers={{ click: () => selectPlace(searchedPlace) }}
+          />
+        )}
 
         {/* popup for a red pin */}
         {selectedPlace && placePosition && (

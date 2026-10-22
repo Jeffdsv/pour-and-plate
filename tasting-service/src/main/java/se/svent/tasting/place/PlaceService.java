@@ -11,6 +11,8 @@ public class PlaceService {
     // never send more than this many places in one answer
     private static final int MAX_RESULTS = 3000;
 
+    private static final int MAX_SEARCH_RESULTS = 20;
+
     // biggest allowed area in degrees, roughly 20 km, so nobody asks for all of sweden at once
     private static final double MAX_SPAN = 0.2;
 
@@ -39,6 +41,27 @@ public class PlaceService {
         double centerLon = (west + east) / 2;
 
         return repository.findInArea(south, west, north, east, centerLat, centerLon, kindNames, MAX_RESULTS)
+                .stream()
+                .map(PlaceResponse::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlaceResponse> search(String text) {
+        String trimmed = (text == null) ? "" : text.trim();
+
+        // one letter matches almost everything, so wait until there are at least two
+        if (trimmed.length() < 2) {
+            return List.of();
+        }
+
+        // in ILIKE, % means any text and _ means any letter, so escape them to search for them as normal letters
+        String pattern = trimmed
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+
+        return repository.searchByName(pattern, trimmed, MAX_SEARCH_RESULTS)
                 .stream()
                 .map(PlaceResponse::from)
                 .toList();

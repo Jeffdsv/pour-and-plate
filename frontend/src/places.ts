@@ -45,3 +45,13 @@ export async function fetchPlaces(b: Bounds, kinds: PlaceKind[] = ALL_KINDS): Pr
   }
   return response.json()
 }
+
+// searches all of sweden for places whose name contains the text, best match first
+export async function searchPlaces(text: string): Promise<Place[]> {
+  const params = new URLSearchParams({ q: text })
+  const response = await apiFetch(`/api/places/search?${params}`)
+  if (!response.ok) {
+    throw new Error(`search answered ${response.status}`)
+  }
+  return response.json()
+}

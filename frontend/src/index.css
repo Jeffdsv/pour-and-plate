@@ -817,15 +817,31 @@ a.google-toggle {
 /* ========== kind filter ========== */
 
 /* a row of pills floating at the top middle of the map, scrolls sideways on a phone */
-.kind-filter {
+/* search box and filter pills stacked at the top middle of the map */
+.map-top {
   position: absolute;
   top: 12px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 8px;
-  max-width: calc(100% - 24px);
+  width: min(640px, calc(100% - 24px));
+  /* the empty space around the search and pills should not block dragging the map */
+  pointer-events: none;
+}
+
+.map-top > * {
+  pointer-events: auto;
+}
+
+/* a row of pills, scrolls sideways on a phone */
+.kind-filter {
+  display: flex;
+  gap: 8px;
+  max-width: 100%;
   padding: 4px;
   overflow-x: auto;
 }
@@ -848,4 +864,72 @@ a.google-toggle {
   border-color: var(--blue);
   background: var(--blue);
   color: white;
+}
+
+/* ========== search ========== */
+
+.search-box {
+  position: relative;
+  width: min(420px, 100%);
+}
+
+.search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 18px;
+  border: 1px solid #D1D5DB;
+  border-radius: 999px;
+  background: white;
+  font-size: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-light), 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* the list of matches floats under the field, on top of the pills */
+.search-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 1;
+  max-height: 320px;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.search-result {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-result:hover {
+  background: #F3F4F6;
+}
+
+.result-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.result-where {
+  font-size: 13px;
+  color: var(--muted);
 }

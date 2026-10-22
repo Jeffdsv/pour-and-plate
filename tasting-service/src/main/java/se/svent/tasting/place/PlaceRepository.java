@@ -29,4 +29,18 @@ public interface PlaceRepository extends JpaRepository<Place, String> {
                            @Param("centerLon") double centerLon,
                            @Param("kinds") List<String> kinds,
                            @Param("maxResults") int maxResults);
+
+
+    // places whose name contains the search text, the most similar names first
+    // the pg_trgm index from V12 keeps the ILIKE fast even with % on both sides
+    @Query(value = """
+            SELECT *
+            FROM place
+            WHERE name ILIKE '%' || :pattern || '%'
+            ORDER BY similarity(name, :text) DESC, name
+            LIMIT :maxResults
+            """, nativeQuery = true)
+    List<Place> searchByName(@Param("pattern") String pattern,
+                             @Param("text") String text,
+                             @Param("maxResults") int maxResults);
 }

@@ -26,4 +26,10 @@ public class PlaceController {
                                           @RequestParam(required = false) List<PlaceKind> kinds) {
         return service.findInArea(south, west, north, east, kinds);
     }
+
+    // GET /api/places/search?q=ekst gives places with ekst in the name, best match first
+    @GetMapping("/search")
+    public List<PlaceResponse> search(@RequestParam String q) {
+        return service.search(q);
+    }
 }
