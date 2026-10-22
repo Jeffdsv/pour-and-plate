@@ -1,6 +1,6 @@
 # Pour & Plate
 
-**Live demo:** https://frontend.gentleplant-06b1ed24.northeurope.azurecontainerapps.io
+**Live demo:** **Live demo:** https://pourandplate.se
 
 > The app scales to zero when nobody is using it, so the first visit can take up to a minute while it wakes up. Accounts are invite only, so ask me for a demo login.
 
