@@ -26,6 +26,9 @@ const POPUP_OPTIONS = {
   autoClose: false,
 
   autoPanPadding: [24, 24] as [number, number],
+
+  // leaflet stops popups at 300px wide, the google box needs more room
+  maxWidth: 460,
 }
 
 // the round bubble with a number that replaces a group of red pins

@@ -673,3 +673,46 @@ textarea {
 .website-link:hover {
   text-decoration: underline;
 }
+
+/* ========== google box ========== */
+
+.google-box {
+  margin-top: 10px;
+}
+
+/* small grey pill, so it doesnt compete with the main buttons */
+.google-toggle {
+  padding: 6px 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 999px;
+  background: white;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.google-toggle:hover {
+  background: #F3F4F6;
+}
+
+/* the google maps window, rounded like the rest of the popup */
+.google-frame {
+  display: block;
+  width: 280px;
+  height: 220px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 12px;
+}
+
+/* the google maps window google only shows the rating when its this big */
+.google-frame {
+  display: block;
+  width: 420px;
+  max-width: calc(100vw - 80px);
+  height: 340px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 12px;
+}

@@ -4,6 +4,7 @@ import { deleteRestaurant, saveRestaurant } from './restaurants'
 import RatingForm, { type Rating } from './RatingForm'
 import Stars from './Stars'
 import WebsiteLink from './WebsiteLink'
+import GoogleBox from './GoogleBox'
 
 // what you see when you click a saved pin, green or orange
 // on a friends map it is read only, so the buttons are hidden
@@ -80,6 +81,7 @@ export default function RestaurantPopup({
       <h3 className="popup-title">{r.name}</h3>
       {r.address && <p className="popup-address">{r.address}</p>}
       <WebsiteLink url={r.website} />
+      <GoogleBox name={r.name} address={r.address} city={r.city} onResize={onResize} />
 
       {editing ? (
         <RatingForm

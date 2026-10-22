@@ -4,6 +4,7 @@ import type { Restaurant, RestaurantStatus } from './types'
 import { saveRestaurant } from './restaurants'
 import RatingForm, { type Rating } from './RatingForm'
 import WebsiteLink from './WebsiteLink'
+import GoogleBox from './GoogleBox'
 
 // what you see when you click a red pin
 // first two buttons, and if you pick visited you get the rating form
@@ -58,6 +59,7 @@ export default function PlacePopup({
       <span className="chip">{place.category.replaceAll('_', ' ')}</span>
             {place.address && <p className="popup-address">{place.address}</p>}
       <WebsiteLink url={place.website} />
+       <GoogleBox name={place.name} address={place.address} city={place.city} onResize={onResize} />
 
       {rating ? (
         <RatingForm
