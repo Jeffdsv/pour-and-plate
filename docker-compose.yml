@@ -1,6 +1,9 @@
-# Local development setup for Pour & Plate.
-# Start:  docker compose up -d
-# Stop:   docker compose down
+# Pour & Plate with Docker Compose.
+# Only the database (for coding with IntelliJ and npm run dev):
+#   docker compose up -d
+# The whole app in containers, open http://localhost:8080:
+#   docker compose --profile app up -d --build
+# Stop:   docker compose --profile app down
 # Reset (deletes all data!): docker compose down -v
 
 services:
@@ -15,11 +18,40 @@ services:
       - "5432:5432"               # host port : container port
     volumes:
       - postgres-data:/var/lib/postgresql   # Keeps your data when the container restarts
-    healthcheck:                  # Lets Docker (and later other services) know when the DB is ready
+    healthcheck:                  # Lets Docker (and the backend) know when the DB is ready
       test: ["CMD-SHELL", "pg_isready -U pourplate -d tasting"]
       interval: 5s
       timeout: 3s
       retries: 10
+
+  backend:
+    build: ./tasting-service      # Uses tasting-service/Dockerfile
+    container_name: pourplate-backend
+    profiles: ["app"]             # Only starts with --profile app
+    environment:
+      # inside docker the database is found by its service name, not localhost
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tasting
+      SPRING_DATASOURCE_USERNAME: pourplate
+      SPRING_DATASOURCE_PASSWORD: pourplate
+      # real secret, read from the .env file when the container starts, never baked into the image
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      # invite links should point to the container version of the site
+      APP_FRONTENDURL: http://localhost:8080
+    depends_on:
+      postgres:
+        condition: service_healthy   # Waits until the healthcheck says the DB is ready
+
+  frontend:
+    build:
+      context: ./frontend         # Uses frontend/Dockerfile
+      args:
+        VITE_GOOGLE_MAPS_KEY: ${VITE_GOOGLE_MAPS_KEY}
+    container_name: pourplate-frontend
+    profiles: ["app"]
+    ports:
+      - "8080:80"                 # Open the app at http://localhost:8080
+    depends_on:
+      - backend
 
 volumes:
   postgres-data:
