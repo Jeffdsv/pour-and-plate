@@ -2,7 +2,7 @@
 
 **Live demo:** **Live demo:** https://pourandplate.se
 
-> The app scales to zero when nobody is using it, so the first visit can take up to a minute while it wakes up. Accounts are invite only, so ask me for a demo login.
+> The app a scales to zero when nobody is using it, so the first visit can take up to a minute while it wakes up. Accounts are invite only, so ask me for a demo login.
 
 I love food, beer and wine, and I brew my own beer. Whenever friends, family or I find a good restaurant, wine or beer, I want an easy way to remember it and share it. I also want to keep track of new places I'd like to go.
 
