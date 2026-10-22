@@ -17,3 +17,12 @@ export async function ensureCsrfToken(): Promise<void> {
     await fetch('/api/auth/me')
   }
 }
+
+// works like fetch, but tells the app when my session is gone so it can show the login page
+export async function apiFetch(input: string, init?: RequestInit): Promise<Response> {
+  const response = await fetch(input, init)
+  if (response.status === 401) {
+    window.dispatchEvent(new Event('session-expired'))
+  }
+  return response
+}

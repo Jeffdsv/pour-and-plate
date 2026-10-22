@@ -1,3 +1,5 @@
+     import { apiFetch } from './api'
+
 // one place from my own api, imported from overture maps
 export interface Place {
   id: string
@@ -28,7 +30,7 @@ export async function fetchPlaces(b: Bounds): Promise<Place[]> {
     east: String(b.east),
   })
 
-  const response = await fetch(`/api/places?${params}`)
+  const response = await apiFetch(`/api/places?${params}`)
   if (!response.ok) {
     throw new Error(`places api answered ${response.status}`)
   }

@@ -36,6 +36,19 @@ function App() {
       .catch(() => setUser(null))
   }, [])
 
+  
+  // if any api call says 401, my session is gone, so show the login page again
+  useEffect(() => {
+    const handleExpired = () => {
+      setView('me')
+      setUser(null)
+    }
+    window.addEventListener('session-expired', handleExpired)
+
+    // cleanup: stop listening if App is ever removed
+    return () => window.removeEventListener('session-expired', handleExpired)
+  }, [])
+
   // load the list of people once someone has logged in
   useEffect(() => {
     if (user) {
