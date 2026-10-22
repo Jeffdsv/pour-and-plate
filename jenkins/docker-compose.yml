@@ -1,0 +1,19 @@
+# jenkins on my own pc, separate from the app so it never gets deployed
+# start: docker compose up -d --build   (run inside the jenkins folder)
+# open:  http://localhost:8090
+
+services:
+  jenkins:
+    build: .
+    container_name: pourplate-jenkins
+    # root so jenkins can use the docker socket below, fine for a jenkins only i can reach
+    user: root
+    ports:
+      - "8090:8080"               # 8080 is already used by the app in docker
+    volumes:
+      - jenkins-home:/var/jenkins_home              # jobs, plugins and settings survive restarts
+      - /var/run/docker.sock:/var/run/docker.sock   # lets jenkins use docker desktop to build images
+    restart: unless-stopped       # starts again with docker desktop
+
+volumes:
+  jenkins-home:
