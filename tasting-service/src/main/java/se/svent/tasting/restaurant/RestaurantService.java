@@ -13,6 +13,8 @@ public class RestaurantService {
 
     private final RestaurantRepository repository;
     private final AppUserRepository users;
+    // the friends feed shows at most this many things from each friend
+    private static final int ACTIVITY_PER_FRIEND = 3;
 
     public RestaurantService(RestaurantRepository repository, AppUserRepository users) {
         this.repository = repository;
@@ -58,6 +60,12 @@ public class RestaurantService {
     @Transactional(readOnly = true)
     public List<TasteRow> findTasteProfile(String username) {
         return repository.findTasteProfile(currentUser(username).getId());
+    }
+
+    // what my friends have done lately, newest first
+    @Transactional(readOnly = true)
+    public List<FriendActivity> findFriendActivity(String username) {
+        return repository.findFriendActivity(currentUser(username).getId(), ACTIVITY_PER_FRIEND);
     }
 
     @Transactional(readOnly = true)

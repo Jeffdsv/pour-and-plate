@@ -265,6 +265,29 @@ class RestaurantApiIntegrationTest {
         assertThat(pizzaVisits).isEqualTo(2);
     }
 
+    // the friends feed: the newest three from each friend, never my own reviews
+    @Test
+    void activity_showsNewestThreeFromEachFriend_neverMine() throws Exception {
+        // my own review is the newest of all, but it should never show up in my friends feed
+        post(wantJson("node/9", "My own place"));
+
+        // erik has four reviews, place 1 is the oldest and place 4 the newest
+        for (int i = 1; i <= 4; i++) {
+            Restaurant review = repository.save(Restaurant.wantToVisit(otherUser(), "Erik place " + i, LAT, LON));
+            // set the time by hand so the order is always the same, place 1 is 9 minutes old, place 4 is 6
+            jdbc.update("UPDATE restaurant SET updated_at = now() - make_interval(mins => ?) WHERE id = ?",
+                    10 - i, review.getId());
+        }
+
+        HttpResponse<String> response = get("/api/restaurants/activity");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+
+        // only the three newest from erik, newest first, and the oldest one is left out
+        List<String> names = JsonPath.read(response.body(), "$[*].name");
+        assertThat(names).containsExactly("Erik place 4", "Erik place 3", "Erik place 2");
+    }
+
     // helpers
 
     // logs in like the frontend does: get a csrf cookie first, then send username and password

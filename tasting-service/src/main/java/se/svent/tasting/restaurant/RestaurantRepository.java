@@ -76,4 +76,26 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
             ORDER BY "averageScore" DESC, "visits" DESC
             """, nativeQuery = true)
     List<TasteRow> findTasteProfile(@Param("userId") Long userId);
+
+    // the newest reviews from my friends, at most perFriend from each, newest first
+    // ROW_NUMBER numbers each friends reviews 1, 2, 3 from the newest, then we keep the first few
+    @Query(value = """
+            SELECT *
+            FROM (
+                SELECT r.id           AS "id",
+                       r.name         AS "name",
+                       r.status       AS "status",
+                       ROUND((r.food_rating + r.atmosphere_rating + r.value_rating) / 3.0, 1) AS "score",
+                       r.updated_at   AS "updatedAt",
+                       u.display_name AS "displayName",
+                       ROW_NUMBER() OVER (PARTITION BY r.user_id ORDER BY r.updated_at DESC) AS "rowNumber"
+                FROM restaurant r
+                JOIN app_user u ON u.id = r.user_id
+                WHERE r.user_id <> :userId
+            ) latest
+            WHERE "rowNumber" <= :perFriend
+            ORDER BY "updatedAt" DESC
+            LIMIT 30
+            """, nativeQuery = true)
+    List<FriendActivity> findFriendActivity(@Param("userId") Long userId, @Param("perFriend") int perFriend);
 }

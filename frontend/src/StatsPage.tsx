@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { fetchTaste, type TasteRow } from './restaurants'
+import { fetchActivity, fetchTaste, type FriendActivity, type TasteRow } from './restaurants'
 import { categoryLabel } from './places'
 import Stars from './Stars'
 
@@ -19,16 +19,44 @@ function bestAspect(rows: TasteRow[]) {
   return aspects.sort((a, b) => b.value - a.value)[0].name
 }
 
-// my stats: a few numbers at the top, then my taste profile per kind of food
+// how long ago, in words, like "5 minutes ago" or "yesterday"
+const TIME_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ['year', 31_536_000],
+  ['month', 2_592_000],
+  ['week', 604_800],
+  ['day', 86_400],
+  ['hour', 3_600],
+  ['minute', 60],
+]
+
+function timeAgo(isoTime: string) {
+  // negative, since it is in the past
+  const seconds = (Date.parse(isoTime) - Date.now()) / 1000
+  const format = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
+
+  for (const [unit, size] of TIME_UNITS) {
+    if (Math.abs(seconds) >= size) {
+      return format.format(Math.round(seconds / size), unit)
+    }
+  }
+  return 'just now'
+}
+
+// my stats: a few numbers at the top, my taste profile, and the latest from my friends
 export default function StatsPage() {
   const [rows, setRows] = useState<TasteRow[]>([])
+  const [activity, setActivity] = useState<FriendActivity[]>([])
 
-  // false until the answer has come, so the empty message does not flash while loading
+  // false until the answers have come, so the empty messages do not flash while loading
   const [loaded, setLoaded] = useState(false)
 
+  // both lists are loaded at the same time, and the page waits for both
   useEffect(() => {
-    fetchTaste()
-      .then(setRows)
+    Promise.all([fetchTaste(), fetchActivity()])
+      .then(([taste, latest]) => {
+        setRows(taste)
+        setActivity(latest)
+      })
       .catch((error) => console.error('could not load my stats', error))
       .finally(() => setLoaded(true))
   }, [])
@@ -80,6 +108,32 @@ export default function StatsPage() {
                 </li>
               ))}
             </ul>
+          </>
+        )}
+
+        {/* the latest from my friends, shown even before i have rated anything myself */}
+        {loaded && (
+          <>
+            <h2 className="stats-heading">📰 Latest from friends</h2>
+            {activity.length === 0 ? (
+              <p className="muted">Nothing from your friends yet.</p>
+            ) : (
+              <ul className="taste-list">
+                {activity.map((item) => (
+                  <li key={item.id} className="taste-row">
+                    <div className="taste-main">
+                      <span className="activity-text">
+                        <strong>{item.displayName}</strong>{' '}
+                        {item.status === 'VISITED' ? 'visited' : 'wants to visit'} <strong>{item.name}</strong>
+                      </span>
+                      <span className="result-where">{timeAgo(item.updatedAt)}</span>
+                    </div>
+                    {/* only visits have a score, wishes do not */}
+                    {item.score !== null && <span className="score-box">{item.score}</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
           </>
         )}
 

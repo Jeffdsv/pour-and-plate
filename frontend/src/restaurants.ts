@@ -69,3 +69,22 @@ export async function fetchTaste(): Promise<TasteRow[]> {
   }
   return response.json()
 }
+
+// one thing a friend did lately, from GET /api/restaurants/activity
+export interface FriendActivity {
+  id: number
+  name: string
+  status: RestaurantStatus
+  score: number | null
+  updatedAt: string
+  displayName: string
+}
+
+// what my friends have done lately, at most 3 from each, newest first
+export async function fetchActivity(): Promise<FriendActivity[]> {
+  const response = await apiFetch('/api/restaurants/activity')
+  if (!response.ok) {
+    throw new Error(`activity answered ${response.status}`)
+  }
+  return response.json()
+}

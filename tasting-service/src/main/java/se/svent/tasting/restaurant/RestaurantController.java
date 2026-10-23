@@ -43,6 +43,12 @@ public class RestaurantController {
         return service.findTasteProfile(authentication.getName());
     }
 
+    // GET /api/restaurants/activity gives my friends newest reviews, at most 3 from each
+    @GetMapping("/activity")
+    public List<FriendActivity> activity(Authentication authentication) {
+        return service.findFriendActivity(authentication.getName());
+    }
+
     // GET /api/restaurants/5
     @GetMapping("/{id}")
     public RestaurantResponse findById(@PathVariable Long id, Authentication authentication) {
