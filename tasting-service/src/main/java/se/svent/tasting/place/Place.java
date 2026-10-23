@@ -51,6 +51,10 @@ public class Place {
     // where the place comes from, overture or osm
     private String source;
 
+    // probably replaced by another place at the same address, hidden on the map, still found in search
+    @Column(name = "likely_closed")
+    private boolean likelyClosed;
+
     @Column(name = "imported_at", nullable = false)
     private Instant importedAt;
 
@@ -72,4 +76,5 @@ public class Place {
     public String getHierarchy() { return hierarchy; }
     public Double getConfidence() { return confidence; }
     public String getSource() { return source; }
+    public boolean isLikelyClosed() { return likelyClosed; }
 }

@@ -57,6 +57,9 @@ export default function PlacePopup({
 
       <h3 className="popup-title">{place.name}</h3>
       <span className="chip">{place.category.replaceAll('_', ' ')}</span>
+            {place.likelyClosed && (
+        <p className="closed-note">⚠️ May have closed: another place at this address is confirmed by two sources</p>
+      )}
             {place.address && <p className="popup-address">{place.address}</p>}
       <WebsiteLink url={place.website} />
        <GoogleBox name={place.name} address={place.address} city={place.city} onResize={onResize} />

@@ -1222,3 +1222,11 @@ a.google-toggle {
 .activity-text {
   color: var(--text);
 }
+
+/* a small warning for places that were probably replaced by another place */
+.closed-note {
+  margin: 6px 0 0;
+  color: #B45309;
+  font-size: 12px;
+  font-weight: 600;
+}

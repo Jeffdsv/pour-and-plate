@@ -17,6 +17,7 @@ public interface PlaceRepository extends JpaRepository<Place, String> {
             WHERE latitude BETWEEN :south AND :north
               AND longitude BETWEEN :west AND :east
               AND kind IN (:kinds)
+              AND NOT likely_closed
             ORDER BY POWER(latitude - :centerLat, 2)
                    + POWER((longitude - :centerLon) * COS(RADIANS(:centerLat)), 2)
             LIMIT :maxResults
@@ -67,6 +68,7 @@ public interface PlaceRepository extends JpaRepository<Place, String> {
                 WHERE p.latitude BETWEEN :minLat AND :maxLat
                   AND p.longitude BETWEEN :minLon AND :maxLon
                   AND p.kind IN (:kinds)
+                  AND NOT p.likely_closed
             ) nearby
             WHERE "distanceMeters" <= :radius
             ORDER BY "distanceMeters"

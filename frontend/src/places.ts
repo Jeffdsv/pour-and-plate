@@ -32,6 +32,7 @@ export interface Place {
   longitude: number
   website: string | null
   kind: PlaceKind
+  likelyClosed: boolean
 }
 
 // the visible part of the map, as four edges

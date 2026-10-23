@@ -58,9 +58,10 @@ export default function SearchBox({ onPick }: { onPick: (place: Place) => void }
         <ul className="search-results">
           {visible.map((place) => (
             <li key={place.id}>
-              <button className="search-result" onClick={() => pick(place)}>
+                <button className="search-result" onClick={() => pick(place)}>
                 <span className="result-name">{place.name}</span>
                 <span className="result-where">{[place.address, place.city].filter(Boolean).join(', ')}</span>
+                {place.likelyClosed && <span className="closed-note">⚠️ May have closed</span>}
               </button>
             </li>
           ))}
