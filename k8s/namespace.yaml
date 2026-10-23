@@ -1,0 +1,5 @@
+# a folder in the cluster for everything that belongs to pour and plate
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pour-and-plate

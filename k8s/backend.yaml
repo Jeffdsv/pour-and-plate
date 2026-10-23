@@ -1,0 +1,78 @@
+# the spring boot backend: settings, two copies, and a stable name for the frontend to call
+
+# settings that are not secret, as environment variables
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: pour-and-plate
+data:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tasting
+  SPRING_DATASOURCE_USERNAME: pourplate
+  APP_FRONTENDURL: http://localhost
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: pour-and-plate
+spec:
+  # two copies, sessions live in postgres so it does not matter which copy answers
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: pour-and-plate-backend:latest
+          # use the image built on this computer, do not try to download it
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: backend-secret
+          # spring boot can take a while to start, give it up to 2.5 minutes before the other checks begin
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8081
+            periodSeconds: 5
+            failureThreshold: 30
+          # is the app alive, if not kubernetes restarts the container
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8081
+            periodSeconds: 10
+          # is the app ready for traffic, if not the service stops sending requests to this copy
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8081
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: 384Mi
+              cpu: 250m
+            limits:
+              memory: 768Mi
+---
+# a stable name inside the cluster, nginx in the frontend calls http://backend:8081
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: pour-and-plate
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 8081
