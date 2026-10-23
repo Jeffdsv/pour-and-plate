@@ -11,7 +11,7 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
   name: pour-and-plate-gateway
-  namespace: pour-and-plate
+  namespace: {{ .Release.Namespace }}          # <<< changed
 spec:
   gatewayClassName: envoy
   listeners:
@@ -24,7 +24,7 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   name: frontend
-  namespace: pour-and-plate
+  namespace: {{ .Release.Namespace }}          # <<< changed
 spec:
   parentRefs:
     - name: pour-and-plate-gateway

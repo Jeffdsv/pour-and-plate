@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: frontend-config
-  namespace: pour-and-plate
+  namespace: {{ .Release.Namespace }}                                  # <<< changed
 data:
   # backend is the name of the backend service, k8s turns it into the right address
   BACKEND_URL: http://backend:8081
@@ -12,9 +12,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
-  namespace: pour-and-plate
+  namespace: {{ .Release.Namespace }}                                  # <<< changed
 spec:
-  replicas: 2
+  replicas: {{ .Values.frontend.replicas }}                            # <<< changed
   selector:
     matchLabels:
       app: frontend
@@ -25,9 +25,9 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: pour-and-plate-frontend:latest
+          image: "{{ .Values.frontend.image }}:{{ .Values.frontend.tag }}" # <<< changed
           # use the image built on this pc, dont download it
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.imagePullPolicy }}               # <<< changed
           ports:
             - containerPort: 80
           envFrom:
@@ -56,7 +56,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: frontend
-  namespace: pour-and-plate
+  namespace: {{ .Release.Namespace }}                                  # <<< changed
 spec:
   selector:
     app: frontend

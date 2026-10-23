@@ -1,0 +1,22 @@
+# all settings for the chart live here, the templates read them
+
+backend:
+  image: pour-and-plate-backend
+  tag: latest
+  replicas: 2
+  # the address people open the app on
+  frontendUrl: http://localhost
+
+frontend:
+  image: pour-and-plate-frontend
+  tag: latest
+  replicas: 2
+
+postgres:
+  image: postgres:18
+  storage: 2Gi
+  database: tasting
+  username: pourplate
+
+# IfNotPresent uses images built on this pc, the cloud would use Always
+imagePullPolicy: IfNotPresent

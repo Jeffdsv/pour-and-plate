@@ -1,0 +1,9 @@
+# basic info about the chart
+apiVersion: v2
+name: pour-and-plate
+description: Pour and Plate, restaurant, wine and beer map with friends
+type: application
+# version of the chart itself, raise it when the chart changes
+version: 0.1.0
+# version of the app the chart deploys
+appVersion: "1.0"
