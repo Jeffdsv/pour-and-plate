@@ -195,6 +195,35 @@ class RestaurantApiIntegrationTest {
         assertThat(eriksWant).containsExactly(1);
     }
 
+    // only places that two or more of us want to visit show up in go together
+    @Test
+    void together_listsPlacesThatTwoOrMoreWantToVisit() throws Exception {
+        // both erik and i want to go here, so it should show up
+        post(wantJson("node/1", "Shared place"));
+        Restaurant eriksWant = Restaurant.wantToVisit(otherUser(), "Shared place", LAT, LON);
+        eriksWant.setPlaceId("node/1");
+        repository.save(eriksWant);
+
+        // only i want to go here, so it should not show up
+        post(wantJson("node/2", "Only mine"));
+
+        // i want to go, but erik has already been, so it is not a shared wish
+        post(wantJson("node/3", "Erik has been"));
+        Restaurant eriksVisit = Restaurant.visited(otherUser(), "Erik has been", LAT, LON, 8, 8, 8, null);
+        eriksVisit.setPlaceId("node/3");
+        repository.save(eriksVisit);
+
+        HttpResponse<String> response = get("/api/restaurants/together");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        List<String> names = JsonPath.read(response.body(), "$[*].name");
+        assertThat(names).containsExactly("Shared place");
+
+        // the names come sorted, from the ORDER BY inside STRING_AGG
+        String wantBy = JsonPath.read(response.body(), "$[0].wantBy");
+        assertThat(wantBy).isEqualTo("Erik, Jeff");
+    }
+
     // helpers
 
     // logs in like the frontend does: get a csrf cookie first, then send username and password
@@ -252,5 +281,12 @@ class RestaurantApiIntegrationTest {
                 .DELETE()
                 .build();
         return http.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    // json for saving a place as want to visit
+    private String wantJson(String placeId, String name) {
+        return """
+                { "placeId": "%s", "name": "%s", "latitude": 59.33, "longitude": 18.06, "status": "WANT_TO_VISIT" }
+                """.formatted(placeId, name);
     }
 }

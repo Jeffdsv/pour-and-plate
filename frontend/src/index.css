@@ -933,3 +933,85 @@ a.google-toggle {
   font-size: 13px;
   color: var(--muted);
 }
+
+/* a short message floating at the top of a map, like when go together is empty */
+.map-note {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  max-width: calc(100% - 48px);
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  background: white;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ========== near me ========== */
+
+/* search and the near me button side by side */
+.map-top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* in the row the search field takes the space that is left */
+.map-top-row .search-box {
+  flex: 1;
+  max-width: 420px;
+}
+
+.near-me {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.near-me-button {
+  padding: 12px 16px;
+  border: 1px solid #D1D5DB;
+  border-radius: 999px;
+  background: white;
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.near-me-button:hover {
+  background: var(--blue-light);
+}
+
+/* a small message under the button, like finding you or nothing within 1 km */
+.near-me-status {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: white;
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* the near me list opens under the button, lined up on its right edge */
+.near-me-results {
+  left: auto;
+  right: 0;
+  width: min(340px, calc(100vw - 24px));
+}
+
+.close-results {
+  align-items: center;
+  color: var(--muted);
+}

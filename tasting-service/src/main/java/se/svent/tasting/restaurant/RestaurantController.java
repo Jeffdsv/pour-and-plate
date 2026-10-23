@@ -30,6 +30,13 @@ public class RestaurantController {
     public List<PlaceSummary> summary() {
         return service.summarizeAllPlaces();
     }
+
+    // GET /api/restaurants/together gives places two or more of us want to visit
+    @GetMapping("/together")
+    public List<GoTogetherPlace> together() {
+        return service.findGoTogetherPlaces();
+    }
+
     // GET /api/restaurants/5
     @GetMapping("/{id}")
     public RestaurantResponse findById(@PathVariable Long id, Authentication authentication) {

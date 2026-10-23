@@ -11,9 +11,10 @@ import EveryonePage from './EveryonePage'
 import SidePanel from './SidePanel'
 import HomePage from './HomePage'
 import ComingSoonPage from './ComingSoonPage'
+import TogetherPage from './TogetherPage'
 
-// which map is shown: my own, everyone combined, or one friend by their id
-type View = 'me' | 'everyone' | number
+// which map is shown: my own, everyone combined, or one friend by their id, and together if u want to visit same place.
+type View = 'me' | 'everyone' | 'together' | number
 
 // below this width we count it as a phone
 const PHONE_WIDTH = 768
@@ -124,9 +125,11 @@ function App() {
                 onClose={() => setPanelOpen(false)}
               />
 
-              {/* everyone gets its own page, my map and friends maps share MapPage */}
+                            {/* everyone and go together get their own pages, my map and friends maps share MapPage */}
               {view === 'everyone' ? (
                 <EveryonePage />
+              ) : view === 'together' ? (
+                <TogetherPage />
               ) : (
                 <MapPage key={String(view)} viewUserId={view === 'me' ? null : view} />
               )}

@@ -43,4 +43,42 @@ public interface PlaceRepository extends JpaRepository<Place, String> {
     List<Place> searchByName(@Param("pattern") String pattern,
                              @Param("text") String text,
                              @Param("maxResults") int maxResults);
+
+    // places of the chosen kinds within radius meters of a point, closest first
+    // the box (BETWEEN) uses the index to skip most of sweden, then haversine gives the exact distance
+    @Query(value = """
+            SELECT *
+            FROM (
+                SELECT p.id        AS "id",
+                       p.name      AS "name",
+                       p.category  AS "category",
+                       p.address   AS "address",
+                       p.city      AS "city",
+                       p.latitude  AS "latitude",
+                       p.longitude AS "longitude",
+                       p.website   AS "website",
+                       p.kind      AS "kind",
+                       2 * 6371000 * ASIN(SQRT(
+                           POWER(SIN(RADIANS(p.latitude - :lat) / 2), 2)
+                         + COS(RADIANS(:lat)) * COS(RADIANS(p.latitude))
+                         * POWER(SIN(RADIANS(p.longitude - :lon) / 2), 2)
+                       )) AS "distanceMeters"
+                FROM place p
+                WHERE p.latitude BETWEEN :minLat AND :maxLat
+                  AND p.longitude BETWEEN :minLon AND :maxLon
+                  AND p.kind IN (:kinds)
+            ) nearby
+            WHERE "distanceMeters" <= :radius
+            ORDER BY "distanceMeters"
+            LIMIT :maxResults
+            """, nativeQuery = true)
+    List<NearbyPlace> findNear(@Param("lat") double lat,
+                               @Param("lon") double lon,
+                               @Param("minLat") double minLat,
+                               @Param("maxLat") double maxLat,
+                               @Param("minLon") double minLon,
+                               @Param("maxLon") double maxLon,
+                               @Param("radius") double radius,
+                               @Param("kinds") List<String> kinds,
+                               @Param("maxResults") int maxResults);
 }

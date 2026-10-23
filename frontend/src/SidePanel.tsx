@@ -2,7 +2,7 @@ import type { User } from './types'
 import type { Person } from './people'
 import InviteButton from './InviteButton'
 
-type View = 'me' | 'everyone' | number
+type View = 'me' | 'everyone' | 'together' | number
 
 interface Props {
   me: User
@@ -79,6 +79,13 @@ export default function SidePanel({ me, people, view, open, onSelect, onClose }:
           counts="All places we have saved"
           active={view === 'everyone'}
           onClick={() => onSelect('everyone')}
+        />
+                <PersonRow
+          avatar="👥"
+          name="Go together"
+          counts="Places two or more of us want to visit"
+          active={view === 'together'}
+          onClick={() => onSelect('together')}
         />
         {friends.map((friend) => (
           <PersonRow

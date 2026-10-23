@@ -48,6 +48,12 @@ public class RestaurantService {
         return repository.summarizeAllPlaces();
     }
 
+    // places two or more of us want to visit, for planning where to go together
+    @Transactional(readOnly = true)
+    public List<GoTogetherPlace> findGoTogetherPlaces() {
+        return repository.findGoTogetherPlaces();
+    }
+
     @Transactional(readOnly = true)
     public RestaurantResponse findById(String username, Long id) {
         return RestaurantResponse.from(getOwnOrThrow(username, id));

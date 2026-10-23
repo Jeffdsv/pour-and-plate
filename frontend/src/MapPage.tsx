@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { MapContainer, Marker, Popup, useMap } from 'react-leaflet'
+import { CircleMarker, MapContainer, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Restaurant } from './types'
 import { fetchPlaces, type Bounds, type Place, type PlaceKind } from './places'
 import KindFilter from './KindFilter'
 import SearchBox from './SearchBox'
+import NearMe from './NearMe'
 import { fetchRestaurants } from './restaurants'
 import { fetchRestaurantsOf } from './people'
 import PlacePopup from './PlacePopup'
@@ -87,6 +88,20 @@ function FlyToPlace({ place }: { place: Place | null }) {
   return null
 }
 
+
+// sits inside the map and flies to where i am when near me has found me
+function FlyToPosition({ position }: { position: [number, number] | null }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (position) {
+      map.flyTo(position, 16, { duration: 1.2 })
+    }
+  }, [map, position])
+
+  return null
+}
+
 // shows my map, or a friends map read only when viewUserId is set
 function MapPage({ viewUserId }: { viewUserId: number | null }) {
   // the saved restaurants shown on the map, mine or a friends
@@ -108,6 +123,9 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
 
   // the place picked in the search, FlyToPlace moves the map there
   const [searchedPlace, setSearchedPlace] = useState<Place | null>(null)
+
+  // where i am, set when near me has found me, shown as a blue dot
+  const [myPosition, setMyPosition] = useState<[number, number] | null>(null)
 
   // points at the open popup, so we can ask leaflet to measure it again
   const popupRef = useRef<L.Popup>(null)
@@ -188,6 +206,12 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
     }
   }
 
+  
+  // near me found where i am
+  const handleLocated = (lat: number, lon: number) => {
+    setMyPosition([lat, lon])
+  }
+
   // a saved or changed restaurant replaces the old one in the list
   const handleSaved = (saved: Restaurant) => {
     setRestaurants((current) => [...current.filter((r) => r.id !== saved.id), saved])
@@ -217,8 +241,12 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
     <>
             {/* search and filter pills on top of the map, only on my own map */}
       {!readOnly && (
-        <div className="map-top">
-          <SearchBox onPick={handlePick} />
+                <div className="map-top">
+          {/* search and near me side by side, the filter pills under them */}
+          <div className="map-top-row">
+            <SearchBox onPick={handlePick} />
+            <NearMe kinds={kinds} onLocated={handleLocated} onPick={handlePick} />
+          </div>
           <KindFilter selected={kinds} onChange={setKinds} />
         </div>
       )}
@@ -229,6 +257,16 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
 
         <VisibleAreaWatcher onChange={setBounds} />
         <FlyToPlace place={searchedPlace} />
+        <FlyToPosition position={myPosition} />
+
+        {/* a blue dot where i am, like on google maps */}
+        {myPosition && (
+          <CircleMarker
+            center={myPosition}
+            radius={8}
+            pathOptions={{ color: 'white', weight: 3, fillColor: '#2F80ED', fillOpacity: 1 }}
+          />
+        )}
 
         {/* red pins grouped into number bubbles that split up when you zoom in */}
         <MarkerClusterGroup

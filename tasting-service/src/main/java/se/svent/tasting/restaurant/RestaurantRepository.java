@@ -37,4 +37,24 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
             GROUP BY r.place_id
             """, nativeQuery = true)
     List<PlaceSummary> summarizeAllPlaces();
+
+    // places that two or more of us want to visit, the most wanted first
+    // WHERE picks the rows before grouping, HAVING picks the groups after counting
+    @Query(value = """
+            SELECT r.place_id      AS "placeId",
+                   MIN(r.name)      AS "name",
+                   MIN(r.address)   AS "address",
+                   MIN(r.latitude)  AS "latitude",
+                   MIN(r.longitude) AS "longitude",
+                   COUNT(*)         AS "wantCount",
+                   STRING_AGG(u.display_name, ', ' ORDER BY u.display_name) AS "wantBy"
+            FROM restaurant r
+            JOIN app_user u ON u.id = r.user_id
+            WHERE r.status = 'WANT_TO_VISIT'
+              AND r.place_id IS NOT NULL
+            GROUP BY r.place_id
+            HAVING COUNT(*) >= 2
+            ORDER BY COUNT(*) DESC, MIN(r.name)
+            """, nativeQuery = true)
+    List<GoTogetherPlace> findGoTogetherPlaces();
 }

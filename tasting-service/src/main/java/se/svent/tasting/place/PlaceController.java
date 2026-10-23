@@ -32,4 +32,13 @@ public class PlaceController {
     public List<PlaceResponse> search(@RequestParam String q) {
         return service.search(q);
     }
+
+    // GET /api/places/near?lat=59.33&lon=18.06&radius=1000&kinds=BEER gives the closest places first
+    @GetMapping("/near")
+    public List<NearbyPlace> near(@RequestParam double lat,
+                                  @RequestParam double lon,
+                                  @RequestParam(defaultValue = "1000") int radius,
+                                  @RequestParam(required = false) List<PlaceKind> kinds) {
+        return service.findNear(lat, lon, radius, kinds);
+    }
 }

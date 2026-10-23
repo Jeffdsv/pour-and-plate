@@ -13,6 +13,12 @@ public class PlaceService {
 
     private static final int MAX_SEARCH_RESULTS = 20;
 
+    // about how many meters one degree of latitude is, used to turn the radius into a box
+    private static final double METERS_PER_DEGREE = 111_320;
+
+    // near me never looks further than this
+    private static final int MAX_RADIUS_METERS = 5000;
+
     // biggest allowed area in degrees, roughly 20 km, so nobody asks for all of sweden at once
     private static final double MAX_SPAN = 0.2;
 
@@ -65,5 +71,29 @@ public class PlaceService {
                 .stream()
                 .map(PlaceResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<NearbyPlace> findNear(double lat, double lon, int radius, List<PlaceKind> kinds) {
+        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+            throw new IllegalArgumentException("lat must be between -90 and 90 and lon between -180 and 180");
+        }
+        if (radius < 1 || radius > MAX_RADIUS_METERS) {
+            throw new IllegalArgumentException("radius must be between 1 and " + MAX_RADIUS_METERS + " meters");
+        }
+
+        // no kinds chosen means all of them
+        List<PlaceKind> chosen = (kinds == null || kinds.isEmpty()) ? List.of(PlaceKind.values()) : kinds;
+        List<String> kindNames = chosen.stream().map(Enum::name).toList();
+
+        // a box around the point that the circle fits inside
+        // degrees of longitude get shorter further north, so the box is wider there
+        double latDelta = radius / METERS_PER_DEGREE;
+        double lonDelta = radius / (METERS_PER_DEGREE * Math.cos(Math.toRadians(lat)));
+
+        return repository.findNear(lat, lon,
+                lat - latDelta, lat + latDelta,
+                lon - lonDelta, lon + lonDelta,
+                radius, kindNames, MAX_RESULTS);
     }
 }

@@ -50,3 +50,23 @@ export interface Person {
   visitedCount: number
   wantCount: number
 }
+
+// a place two or more of us want to visit, from GET /api/restaurants/together
+export interface GoTogetherPlace {
+  placeId: string
+  name: string
+  address: string | null
+  latitude: number
+  longitude: number
+  wantCount: number
+  wantBy: string
+}
+
+// places two or more of us want to visit, the most wanted first
+export async function fetchGoTogether(): Promise<GoTogetherPlace[]> {
+  const response = await apiFetch('/api/restaurants/together')
+  if (!response.ok) {
+    throw new Error(`go together answered ${response.status}`)
+  }
+  return response.json()
+}

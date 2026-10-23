@@ -55,3 +55,34 @@ export async function searchPlaces(text: string): Promise<Place[]> {
   }
   return response.json()
 }
+
+// a place two or more of us want to visit, from GET /api/restaurants/together
+export interface GoTogetherPlace {
+  placeId: string
+  name: string
+  address: string | null
+  latitude: number
+  longitude: number
+  wantCount: number
+  wantBy: string
+}
+
+// a place close to me, the same as a place plus how far away it is
+export interface NearbyPlace extends Place {
+  distanceMeters: number
+}
+
+// the closest places of the chosen kinds within radius meters, closest first
+export async function fetchNear(lat: number, lon: number, radius: number, kinds: PlaceKind[]): Promise<NearbyPlace[]> {
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lon: String(lon),
+    radius: String(radius),
+    kinds: kinds.join(','),
+  })
+  const response = await apiFetch(`/api/places/near?${params}`)
+  if (!response.ok) {
+    throw new Error(`near me answered ${response.status}`)
+  }
+  return response.json()
+}
