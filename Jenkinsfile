@@ -1,5 +1,6 @@
 // the pipeline jenkins runs for every new commit on github
 // tests, then builds both images, pushes them to github and deploys them to azure
+// and to the local kubernetes cluster with helm
 pipeline {
     agent any
 
@@ -81,6 +82,27 @@ pipeline {
                         az extension add --name containerapp --upgrade --only-show-errors
                         az containerapp update --name backend --resource-group "$RESOURCE_GROUP" --image "$REGISTRY/pour-and-plate-backend:$TAG" --output none
                         az containerapp update --name frontend --resource-group "$RESOURCE_GROUP" --image "$REGISTRY/pour-and-plate-frontend:$TAG" --output none
+                    '''
+                }
+            }
+        }
+
+
+        stage('Deploy to local cluster') {
+            steps {
+                // the kubeconfig file from jenkins credentials, kubectl and helm read it through KUBECONFIG
+                withCredentials([file(credentialsId: 'kubeconfig-local', variable: 'KUBECONFIG')]) {
+                    // same images as azure, the cluster finds them in the local docker because jenkins just built them
+                    // wait makes the build fail if the new pods never get ready
+                    sh '''
+                        helm upgrade --install pour-and-plate helm/pour-and-plate \
+                          --namespace pour-and-plate \
+                          --kube-context docker-desktop \
+                          --set backend.image="$REGISTRY/pour-and-plate-backend" \
+                          --set backend.tag="$TAG" \
+                          --set frontend.image="$REGISTRY/pour-and-plate-frontend" \
+                          --set frontend.tag="$TAG" \
+                          --wait --timeout 5m
                     '''
                 }
             }

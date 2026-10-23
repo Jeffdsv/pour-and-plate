@@ -14,5 +14,13 @@ RUN apt-get update \
  && curl -sL https://aka.ms/InstallAzureCLIDeb | bash \
  && rm -rf /var/lib/apt/lists/*
 
+# kubectl and helm so jenkins can deploy to the kubernetes cluster
+RUN ARCH=$(dpkg --print-architecture) \
+ && curl -fsSLo /usr/local/bin/kubectl https://dl.k8s.io/release/v1.36.1/bin/linux/${ARCH}/kubectl \
+ && chmod +x /usr/local/bin/kubectl \
+ && curl -fsSL https://get.helm.sh/helm-v4.3.1-linux-${ARCH}.tar.gz | tar -xz -C /tmp \
+ && mv /tmp/linux-${ARCH}/helm /usr/local/bin/helm \
+ && rm -rf /tmp/linux-${ARCH}
+
 # the plugin that lets a pipeline run steps inside docker containers
 RUN jenkins-plugin-cli --plugins docker-workflow
