@@ -1,0 +1,65 @@
+# settings the frontend reads when it starts
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: pour-and-plate
+data:
+  # backend is the name of the backend service, k8s turns it into the right address
+  BACKEND_URL: http://backend:8081
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: pour-and-plate
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: pour-and-plate-frontend:latest
+          # use the image built on this pc, dont download it
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: frontend-config
+          # nginx starts fast so no startup probe is needed
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 20
+          resources:
+            requests:
+              memory: 32Mi
+              cpu: 50m
+            limits:
+              memory: 128Mi
+---
+# one stable name for both frontend pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: pour-and-plate
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
