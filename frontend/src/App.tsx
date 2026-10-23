@@ -11,6 +11,7 @@ import EveryonePage from './EveryonePage'
 import SidePanel from './SidePanel'
 import HomePage from './HomePage'
 import ComingSoonPage from './ComingSoonPage'
+import StatsPage from './StatsPage'
 import TogetherPage from './TogetherPage'
 
 // which map is shown: my own, everyone combined, or one friend by their id, and together if u want to visit same place.
@@ -145,6 +146,8 @@ function App() {
           path="/beer"
           element={<ComingSoonPage icon="🍺" title="Beer" text="Tips, beer styles and my own brewing notes." />}
         />
+        
+        <Route path="/stats" element={<StatsPage />} />
 
         {/* any other address goes back to the start page */}
         <Route path="*" element={<Navigate to="/" replace />} />

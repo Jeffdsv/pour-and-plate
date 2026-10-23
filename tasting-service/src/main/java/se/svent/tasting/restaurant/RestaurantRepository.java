@@ -2,6 +2,7 @@ package se.svent.tasting.restaurant;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -57,4 +58,22 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
             ORDER BY COUNT(*) DESC, MIN(r.name)
             """, nativeQuery = true)
     List<GoTogetherPlace> findGoTogetherPlaces();
+
+    // my taste profile: for each kind of food i have visited, how many and my average ratings
+    // the category lives in place, so we join my reviews with the places they belong to
+    @Query(value = """
+            SELECT p.category AS "category",
+                   COUNT(*)   AS "visits",
+                   ROUND(AVG((r.food_rating + r.atmosphere_rating + r.value_rating) / 3.0), 1) AS "averageScore",
+                   ROUND(AVG(r.food_rating), 1)       AS "averageFood",
+                   ROUND(AVG(r.atmosphere_rating), 1) AS "averageAtmosphere",
+                   ROUND(AVG(r.value_rating), 1)      AS "averageValue"
+            FROM restaurant r
+            JOIN place p ON p.id = r.place_id
+            WHERE r.user_id = :userId
+              AND r.status = 'VISITED'
+            GROUP BY p.category
+            ORDER BY "averageScore" DESC, "visits" DESC
+            """, nativeQuery = true)
+    List<TasteRow> findTasteProfile(@Param("userId") Long userId);
 }

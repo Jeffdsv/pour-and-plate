@@ -50,3 +50,22 @@ export async function deleteRestaurant(id: number): Promise<void> {
     throw new Error(`removing failed with ${response.status}`)
   }
 }
+
+// one row in my taste profile, from GET /api/restaurants/taste
+export interface TasteRow {
+  category: string
+  visits: number
+  averageScore: number
+  averageFood: number
+  averageAtmosphere: number
+  averageValue: number
+}
+
+// my average ratings per kind of food, best first
+export async function fetchTaste(): Promise<TasteRow[]> {
+  const response = await apiFetch('/api/restaurants/taste')
+  if (!response.ok) {
+    throw new Error(`taste answered ${response.status}`)
+  }
+  return response.json()
+}

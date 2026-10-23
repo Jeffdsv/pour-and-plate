@@ -11,6 +11,7 @@ import se.svent.tasting.TestcontainersConfiguration;
 import se.svent.tasting.user.AppUser;
 import se.svent.tasting.user.AppUserRepository;
 import se.svent.tasting.user.Role;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 import java.net.CookieManager;
@@ -40,6 +41,10 @@ class RestaurantApiIntegrationTest {
 
     @Autowired
     private AppUserRepository users;
+
+    // the taste profile joins with place, so the test writes a few places with plain sql
+    @Autowired
+    private JdbcTemplate jdbc;
 
     private static final BigDecimal LAT = new BigDecimal("59.33");
     private static final BigDecimal LON = new BigDecimal("18.06");
@@ -224,6 +229,42 @@ class RestaurantApiIntegrationTest {
         assertThat(wantBy).isEqualTo("Erik, Jeff");
     }
 
+    // my taste profile: average per kind of food, only my own visits, best first
+    @Test
+    void taste_givesMyAveragePerCategory_onlyFromMyVisits() throws Exception {
+        // the place ids start with taste- so this test can clean up only its own places
+        jdbc.update("DELETE FROM place WHERE id LIKE 'taste-%'");
+        insertPlace("taste-1", "Pizza One", "pizza_restaurant");
+        insertPlace("taste-2", "Pizza Two", "pizza_restaurant");
+        insertPlace("taste-3", "Sushi Place", "sushi_restaurant");
+        insertPlace("taste-4", "Thai Wish", "thai_restaurant");
+        insertPlace("taste-5", "Eriks Cafe", "cafe");
+
+        // two pizza places (9 and 7, so 8.0 on average) and one sushi place (6)
+        post(visitedJson("taste-1", "Pizza One", 9));
+        post(visitedJson("taste-2", "Pizza Two", 7));
+        post(visitedJson("taste-3", "Sushi Place", 6));
+
+        // only on my wishlist, no ratings, so it should not count
+        post(wantJson("taste-4", "Thai Wish"));
+
+        // erik visited a cafe, but this is my profile, so it should not count
+        Restaurant eriksVisit = Restaurant.visited(otherUser(), "Eriks Cafe", LAT, LON, 10, 10, 10, null);
+        eriksVisit.setPlaceId("taste-5");
+        repository.save(eriksVisit);
+
+        HttpResponse<String> response = get("/api/restaurants/taste");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        List<String> categories = JsonPath.read(response.body(), "$[*].category");
+        assertThat(categories).containsExactly("pizza_restaurant", "sushi_restaurant");
+
+        Double pizzaScore = JsonPath.read(response.body(), "$[0].averageScore");
+        Integer pizzaVisits = JsonPath.read(response.body(), "$[0].visits");
+        assertThat(pizzaScore).isEqualTo(8.0);
+        assertThat(pizzaVisits).isEqualTo(2);
+    }
+
     // helpers
 
     // logs in like the frontend does: get a csrf cookie first, then send username and password
@@ -288,5 +329,21 @@ class RestaurantApiIntegrationTest {
         return """
                 { "placeId": "%s", "name": "%s", "latitude": 59.33, "longitude": 18.06, "status": "WANT_TO_VISIT" }
                 """.formatted(placeId, name);
+    }
+
+    // json for saving a place as visited, with the same rating for all three
+    private String visitedJson(String placeId, String name, int rating) {
+        return """
+                { "placeId": "%s", "name": "%s", "latitude": 59.33, "longitude": 18.06, "status": "VISITED",
+                  "foodRating": %d, "atmosphereRating": %d, "valueRating": %d }
+                """.formatted(placeId, name, rating, rating, rating);
+    }
+
+    // a place in the place table, kind is filled in by postgres
+    private void insertPlace(String id, String name, String category) {
+        jdbc.update("""
+                INSERT INTO place (id, name, category, latitude, longitude, imported_at)
+                VALUES (?, ?, ?, 59.33, 18.06, now())
+                """, id, name, category);
     }
 }

@@ -1015,3 +1015,205 @@ a.google-toggle {
   align-items: center;
   color: var(--muted);
 }
+
+/* ========== near you panel ========== */
+
+/* a card on the right side of the map, like the side panel on the left */
+.near-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 1100;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius);
+  background: white;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.near-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 6px;
+  font-size: 17px;
+  color: var(--blue);
+}
+
+/* a row of small pill buttons, scrolls sideways if it does not fit */
+.chip-row {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+  padding: 6px 16px;
+  overflow-x: auto;
+}
+
+.chip-button {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 999px;
+  background: white;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip-button.active {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: white;
+}
+
+/* the list takes the rest of the height and scrolls by itself */
+.near-list {
+  flex: 1;
+  margin: 6px 0 0;
+  padding: 6px 8px 12px;
+  overflow-y: auto;
+  list-style: none;
+  border-top: 1px solid #EEE;
+}
+
+/* name and info on the left, the kind icon on the right */
+.near-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.near-row:hover {
+  background: #F3F4F6;
+}
+
+.near-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.near-icon {
+  flex-shrink: 0;
+  font-size: 22px;
+}
+
+.near-empty {
+  padding: 16px 10px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* on a phone the panel slides up from the bottom instead, like a bottom sheet */
+@media (max-width: 768px) {
+  .near-panel {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 55%;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+}
+
+/* ========== stats page ========== */
+
+/* the stats page is a centered column, not wider than is easy to read */
+.stats {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.stats-empty {
+  text-align: center;
+}
+
+/* three small cards in a row, they wrap on a phone */
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.stats-heading {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: var(--blue);
+}
+
+.taste-list {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--radius);
+  background: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+/* the name and details on the left, score and stars on the right */
+.taste-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.taste-row + .taste-row {
+  border-top: 1px solid #EEE;
+}
+
+.taste-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.taste-score {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+/* on a phone the stars take too much room next to the details */
+@media (max-width: 480px) {
+  .taste-score .stars {
+    display: none;
+  }
+}

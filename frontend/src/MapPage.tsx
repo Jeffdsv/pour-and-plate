@@ -6,6 +6,7 @@ import { fetchPlaces, type Bounds, type Place, type PlaceKind } from './places'
 import KindFilter from './KindFilter'
 import SearchBox from './SearchBox'
 import NearMe from './NearMe'
+import NearPanel from './NearPanel'
 import { fetchRestaurants } from './restaurants'
 import { fetchRestaurantsOf } from './people'
 import PlacePopup from './PlacePopup'
@@ -127,6 +128,9 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
   // where i am, set when near me has found me, shown as a blue dot
   const [myPosition, setMyPosition] = useState<[number, number] | null>(null)
 
+  // true while the near you panel is open
+  const [nearOpen, setNearOpen] = useState(false)
+
   // points at the open popup, so we can ask leaflet to measure it again
   const popupRef = useRef<L.Popup>(null)
 
@@ -208,8 +212,19 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
 
   
   // near me found where i am
+    // near me found where i am, so show the blue dot and open the near you panel
   const handleLocated = (lat: number, lon: number) => {
     setMyPosition([lat, lon])
+    setNearOpen(true)
+  }
+
+  // a place picked in the near you panel
+  // on a phone the panel covers the bottom of the map, so close it to let the popup be seen
+  const handleNearPick = (place: Place) => {
+    handlePick(place)
+    if (window.innerWidth <= 768) {
+      setNearOpen(false)
+    }
   }
 
   // a saved or changed restaurant replaces the old one in the list
@@ -245,10 +260,15 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
           {/* search and near me side by side, the filter pills under them */}
           <div className="map-top-row">
             <SearchBox onPick={handlePick} />
-            <NearMe kinds={kinds} onLocated={handleLocated} onPick={handlePick} />
+              <NearMe onLocated={handleLocated} />
           </div>
           <KindFilter selected={kinds} onChange={setKinds} />
         </div>
+      )}
+
+      {/* the near you panel, on the right on a computer and at the bottom on a phone */}
+      {nearOpen && myPosition && (
+        <NearPanel position={myPosition} onPick={handleNearPick} onClose={() => setNearOpen(false)} />
       )}
 
       <MapContainer center={STOCKHOLM} zoom={15} maxZoom={19} fadeAnimation={false} className="map">

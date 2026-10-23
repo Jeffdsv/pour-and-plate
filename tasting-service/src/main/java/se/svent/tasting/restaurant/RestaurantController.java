@@ -37,6 +37,12 @@ public class RestaurantController {
         return service.findGoTogetherPlaces();
     }
 
+    // GET /api/restaurants/taste gives my average ratings per kind of food, best first
+    @GetMapping("/taste")
+    public List<TasteRow> taste(Authentication authentication) {
+        return service.findTasteProfile(authentication.getName());
+    }
+
     // GET /api/restaurants/5
     @GetMapping("/{id}")
     public RestaurantResponse findById(@PathVariable Long id, Authentication authentication) {

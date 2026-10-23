@@ -54,6 +54,12 @@ public class RestaurantService {
         return repository.findGoTogetherPlaces();
     }
 
+    // my average ratings per kind of food, best first
+    @Transactional(readOnly = true)
+    public List<TasteRow> findTasteProfile(String username) {
+        return repository.findTasteProfile(currentUser(username).getId());
+    }
+
     @Transactional(readOnly = true)
     public RestaurantResponse findById(String username, Long id) {
         return RestaurantResponse.from(getOwnOrThrow(username, id));

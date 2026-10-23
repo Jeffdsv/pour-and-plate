@@ -6,6 +6,21 @@ export type PlaceKind = 'RESTAURANT' | 'CAFE' | 'WINE' | 'BEER' | 'BAR'
 // all of them, what the map shows from the start
 export const ALL_KINDS: PlaceKind[] = ['RESTAURANT', 'CAFE', 'WINE', 'BEER', 'BAR']
 
+// one icon per kind, used in lists so you can see what kind of place it is
+export const KIND_ICONS: Record<PlaceKind, string> = {
+  RESTAURANT: '🍽️',
+  CAFE: '☕',
+  WINE: '🍷',
+  BEER: '🍺',
+  BAR: '🍸',
+}
+
+// thai_restaurant becomes Thai restaurant
+export function categoryLabel(category: string) {
+  const text = category.replaceAll('_', ' ')
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
 // one place from my own api, imported from overture maps
 export interface Place {
   id: string
