@@ -42,6 +42,15 @@ public class Place {
     @Column(insertable = false, updatable = false)
     private String kind;
 
+    // overtures chain of categories as text, like food_and_drink,alcoholic_beverage_venue,bar,pub
+    private String hierarchy;
+
+    // how sure the source is that the place exists, from 0 to 1
+    private Double confidence;
+
+    // where the place comes from, overture or osm
+    private String source;
+
     @Column(name = "imported_at", nullable = false)
     private Instant importedAt;
 
@@ -60,4 +69,7 @@ public class Place {
     public String getPhone() { return phone; }
     public Instant getImportedAt() { return importedAt; }
     public String getKind() { return kind; }
+    public String getHierarchy() { return hierarchy; }
+    public Double getConfidence() { return confidence; }
+    public String getSource() { return source; }
 }
