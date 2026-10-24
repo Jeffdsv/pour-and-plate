@@ -39,9 +39,10 @@ public class RestaurantController {
 
 
     // GET /api/restaurants/top gives the best rated places, at least 2 reviews each, best first
+    // GET /api/restaurants/top?kinds=BAR,WINE_BAR ranks only those kinds
     @GetMapping("/top")
-    public List<TopPlace> top() {
-        return service.findTopPlaces();
+    public List<TopPlace> top(@RequestParam(required = false) List<String> kinds) {
+        return service.findTopPlaces(kinds);
     }
 
     // GET /api/restaurants/taste gives my average ratings per kind of food, best first

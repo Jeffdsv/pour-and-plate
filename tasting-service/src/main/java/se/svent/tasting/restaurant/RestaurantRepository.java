@@ -122,4 +122,29 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
             LIMIT 20
             """, nativeQuery = true)
     List<TopPlace> findTopPlaces();
+
+
+    // the same ranking, but only places of the chosen kinds, so the best bar becomes number 1
+    // RANK runs after WHERE, so the numbers start at 1 within the chosen kinds
+    @Query(value = """
+            SELECT r.place_id       AS "placeId",
+                   MIN(r.name)      AS "name",
+                   MIN(r.latitude)  AS "latitude",
+                   MIN(r.longitude) AS "longitude",
+                   COUNT(*)         AS "reviewCount",
+                   ROUND(AVG((r.food_rating + r.atmosphere_rating + r.value_rating) / 3.0), 1) AS "averageScore",
+                   RANK() OVER (
+                       ORDER BY ROUND(AVG((r.food_rating + r.atmosphere_rating + r.value_rating) / 3.0), 1) DESC,
+                                COUNT(*) DESC
+                   ) AS "rank"
+            FROM restaurant r
+            JOIN place p ON p.id = r.place_id
+            WHERE r.status = 'VISITED'
+              AND p.kind IN (:kinds)
+            GROUP BY r.place_id
+            HAVING COUNT(*) >= 2
+            ORDER BY "rank", MIN(r.name)
+            LIMIT 20
+            """, nativeQuery = true)
+    List<TopPlace> findTopPlacesOfKinds(@Param("kinds") List<String> kinds);
 }

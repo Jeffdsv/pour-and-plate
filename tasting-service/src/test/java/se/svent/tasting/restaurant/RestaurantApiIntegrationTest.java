@@ -329,6 +329,41 @@ class RestaurantApiIntegrationTest {
         assertThat(popularReviews).isEqualTo(3);
     }
 
+
+    // with kinds, only those kinds are ranked, and the numbers start at 1 again
+    @Test
+    void top_withKinds_ranksOnlyThoseKinds() throws Exception {
+        jdbc.update("DELETE FROM place WHERE id LIKE 'topk-%'");
+        insertPlace("topk-1", "Pizza Best", "pizza_restaurant");
+        insertPlace("topk-2", "Cafe Good", "cafe");
+        insertPlace("topk-3", "Cafe Ok", "cafe");
+
+        // ask postgres which kind it gave each place, so the test does not depend on the kind names
+        String cafeKind = jdbc.queryForObject("SELECT kind FROM place WHERE id = 'topk-2'", String.class);
+        String pizzaKind = jdbc.queryForObject("SELECT kind FROM place WHERE id = 'topk-1'", String.class);
+        assertThat(cafeKind).isNotEqualTo(pizzaKind);
+
+        AppUser erik = otherUser();
+
+        // the best overall, but not a cafe
+        post(visitedJson("topk-1", "Pizza Best", 10));
+        saveVisited(erik, "topk-1", "Pizza Best", 10);
+
+        post(visitedJson("topk-2", "Cafe Good", 9));
+        saveVisited(erik, "topk-2", "Cafe Good", 9);
+
+        post(visitedJson("topk-3", "Cafe Ok", 7));
+        saveVisited(erik, "topk-3", "Cafe Ok", 7);
+
+        HttpResponse<String> response = get("/api/restaurants/top?kinds=" + cafeKind);
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        List<String> names = JsonPath.read(response.body(), "$[*].name");
+        List<Integer> ranks = JsonPath.read(response.body(), "$[*].rank");
+        assertThat(names).containsExactly("Cafe Good", "Cafe Ok");
+        assertThat(ranks).containsExactly(1, 2);
+    }
+
     // helpers
 
     // logs in like the frontend does: get a csrf cookie first, then send username and password

@@ -58,9 +58,14 @@ public class RestaurantService {
 
 
     // the best rated places, at least 2 visited reviews each, best first
+    // the best rated places, at least 2 visited reviews each, best first
+    // no kinds means all kinds, otherwise only those kinds are ranked
     @Transactional(readOnly = true)
-    public List<TopPlace> findTopPlaces() {
-        return repository.findTopPlaces();
+    public List<TopPlace> findTopPlaces(List<String> kinds) {
+        if (kinds == null || kinds.isEmpty()) {
+            return repository.findTopPlaces();
+        }
+        return repository.findTopPlacesOfKinds(kinds);
     }
 
     // my average ratings per kind of food, best first
