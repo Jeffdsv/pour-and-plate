@@ -7,11 +7,11 @@ import KindFilter from './KindFilter'
 import SearchBox from './SearchBox'
 import NearMe from './NearMe'
 import NearPanel from './NearPanel'
-import { fetchRestaurants } from './restaurants'
+import { fetchRestaurants, fetchTopPlaces, type TopPlace } from './restaurants'
 import { fetchRestaurantsOf } from './people'
 import PlacePopup from './PlacePopup'
 import RestaurantPopup from './RestaurantPopup'
-import { ICONS } from './icons'
+import { ICONS, rankIcon } from './icons'
 import VectorBaseMap from './VectorBaseMap'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import L from 'leaflet'
@@ -103,6 +103,27 @@ function FlyToPosition({ position }: { position: [number, number] | null }) {
   return null
 }
 
+// sits inside the map and zooms so every ranked pin fits on the screen
+// the ranked places can be anywhere in sweden, not only where the map is looking
+function FitToTopPlaces({ places }: { places: TopPlace[] | null }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!places || places.length === 0) {
+      return
+    }
+    if (places.length === 1) {
+      map.flyTo([places[0].latitude, places[0].longitude], 15, { duration: 1.2 })
+      return
+    }
+    const box = L.latLngBounds(places.map((p) => [p.latitude, p.longitude] as [number, number]))
+    // padding keeps pins away from the edges, maxZoom stops it zooming in too far when pins are close
+    map.flyToBounds(box, { padding: [60, 60], maxZoom: 16, duration: 1.2 })
+  }, [map, places])
+
+  return null
+}
+
 // shows my map, or a friends map read only when viewUserId is set
 function MapPage({ viewUserId }: { viewUserId: number | null }) {
   // the saved restaurants shown on the map, mine or a friends
@@ -117,6 +138,21 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
   // which kinds of places to show, all of them from the start
     // which kinds of places to show, none from the start so the map is clean until you pick something
   const [kinds, setKinds] = useState<PlaceKind[]>([])
+
+  // true when the top rated pill is on, the map then shows only the ranked places
+  const [topRated, setTopRated] = useState(false)
+
+    // the last ranking that came back, and which kinds it was asked for
+  const [topResult, setTopResult] = useState<{ key: string; places: TopPlace[] } | null>(null)
+
+  // the selected kinds as one string, so it is easy to compare with the answer
+  const topKey = kinds.join(',')
+
+  // the ranking to show, null while the answer for the selected kinds has not come back yet
+  const topPlaces = topRated && topResult?.key === topKey ? topResult.places : null
+
+  // the clicked numbered pin
+  const [selectedTop, setSelectedTop] = useState<TopPlace | null>(null)
 
   // the clicked pin, only one of these is set at a time
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
@@ -149,6 +185,11 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
     () => (selectedRestaurant ? [selectedRestaurant.latitude, selectedRestaurant.longitude] : null),
     [selectedRestaurant],
   )
+  // same idea for the numbered pin popup
+  const topPosition = useMemo<[number, number] | null>(
+    () => (selectedTop ? [selectedTop.latitude, selectedTop.longitude] : null),
+    [selectedTop],
+  )
 
   // loads my restaurants, or a friends restaurants when looking at their map
   useEffect(() => {
@@ -160,8 +201,9 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
 
   // load places again when the map moves or the filter changes
   useEffect(() => {
+    //  top rated shows only ranked places, so no need to load the red pins
     // zoomed out too far, or every pill turned off, nothing to ask for
-    if (bounds === null || kinds.length === 0) {
+    if (topRated || bounds === null || kinds.length === 0) {
       return
     }
 
@@ -179,7 +221,29 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
     return () => {
       cancelled = true
     }
-  }, [bounds, kinds])
+  }, [bounds, kinds, topRated])
+
+    // load the ranking when top rated is turned on, or the kinds change while it is on
+  useEffect(() => {
+    if (!topRated) {
+      return
+    }
+
+    // the answer remembers which kinds it was for, so an old answer is never shown for new kinds
+    let cancelled = false
+    const key = kinds.join(',')
+    fetchTopPlaces(kinds)
+      .then((result) => {
+        if (!cancelled) {
+          setTopResult({ key, places: result })
+        }
+      })
+      .catch((error) => console.error('could not load top places', error))
+
+    return () => {
+      cancelled = true
+    }
+  }, [topRated, kinds])
 
   // clicking a red pin closes any open popup for saved pins, and the other way round
   const selectPlace = (p: Place) => {
@@ -195,6 +259,14 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
   const closePopups = () => {
     setSelectedPlace(null)
     setSelectedRestaurant(null)
+    // the numbered pin popup too
+    setSelectedTop(null)
+  }
+
+  // switching top rated on or off closes any open popup, its pin may disappear
+  const handleTopRated = (on: boolean) => {
+    closePopups()
+    setTopRated(on)
   }
 
   
@@ -262,7 +334,15 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
             <SearchBox onPick={handlePick} />
               <NearMe onLocated={handleLocated} />
           </div>
-          <KindFilter selected={kinds} onChange={setKinds} />
+          {/* handleTopRated instead of setTopRated, so popups close when switching */}
+          <KindFilter selected={kinds} onChange={setKinds} topRated={topRated} onTopRatedChange={handleTopRated} />
+        </div>
+      )}
+
+      {/* top rated is on, the ranking has loaded, and nothing has 2 reviews yet */}
+      {topRated && topPlaces !== null && topPlaces.length === 0 && (
+        <div className="top-empty">
+          {kinds.length === 0 ? 'No place has 2 reviews yet' : 'None of these kinds has 2 reviews yet'}
         </div>
       )}
 
@@ -278,6 +358,7 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
         <VisibleAreaWatcher onChange={setBounds} />
         <FlyToPlace place={searchedPlace} />
         <FlyToPosition position={myPosition} />
+        <FitToTopPlaces places={topRated ? topPlaces : null} />
 
         {/* a blue dot where i am, like on google maps */}
         {myPosition && (
@@ -288,43 +369,60 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
           />
         )}
 
-        {/* red pins grouped into number bubbles that split up when you zoom in */}
-        <MarkerClusterGroup
-          chunkedLoading
-          maxClusterRadius={90}
-          showCoverageOnHover={false}
-          disableClusteringAtZoom={18}
-          iconCreateFunction={clusterIcon}
-        >
-          {unsaved.map((p) => (
+        {/* the normal pins, only when top rated is off */}
+        {!topRated && (
+          <>
+            {/* red pins grouped into number bubbles that split up when you zoom in */}
+            <MarkerClusterGroup
+              chunkedLoading
+              maxClusterRadius={90}
+              showCoverageOnHover={false}
+              disableClusteringAtZoom={18}
+              iconCreateFunction={clusterIcon}
+            >
+              {unsaved.map((p) => (
+                <Marker
+                  key={p.id}
+                  position={[p.latitude, p.longitude]}
+                  icon={ICONS.UNSAVED}
+                  eventHandlers={{ click: () => selectPlace(p) }}
+                />
+              ))}
+            </MarkerClusterGroup>
+
+            {/* saved restaurants, orange with a fork or green with a smiley */}
+            {restaurants.map((r) => (
+              <Marker
+                key={r.id}
+                position={[r.latitude, r.longitude]}
+                icon={ICONS[r.status]}
+                eventHandlers={{ click: () => selectRestaurant(r) }}
+              />
+            ))}
+
+            {/* the place picked in the search always gets its pin, even when its kind is filtered out */}
+            {searchedPlace && !savedIds.has(searchedPlace.id) && (
+              <Marker
+                position={[searchedPlace.latitude, searchedPlace.longitude]}
+                icon={ICONS.UNSAVED}
+                eventHandlers={{ click: () => selectPlace(searchedPlace) }}
+              />
+            )}
+          </>
+        )}
+
+        {/* the numbered pins, only when top rated is on */}
+        {/* zIndexOffset puts a better rank on top when two pins overlap */}
+        {topRated &&
+          topPlaces?.map((t) => (
             <Marker
-              key={p.id}
-              position={[p.latitude, p.longitude]}
-              icon={ICONS.UNSAVED}
-              eventHandlers={{ click: () => selectPlace(p) }}
+              key={t.placeId}
+              position={[t.latitude, t.longitude]}
+              icon={rankIcon(t.rank)}
+              zIndexOffset={1000 - t.rank}
+              eventHandlers={{ click: () => setSelectedTop(t) }}
             />
           ))}
-        </MarkerClusterGroup>
-
-        {/* saved restaurants, orange with a fork or green with a smiley */}
-        {restaurants.map((r) => (
-          <Marker
-            key={r.id}
-            position={[r.latitude, r.longitude]}
-            icon={ICONS[r.status]}
-            eventHandlers={{ click: () => selectRestaurant(r) }}
-          />
-        ))}
-
-        
-        {/* the place picked in the search always gets its pin, even when its kind is filtered out */}
-        {searchedPlace && !savedIds.has(searchedPlace.id) && (
-          <Marker
-            position={[searchedPlace.latitude, searchedPlace.longitude]}
-            icon={ICONS.UNSAVED}
-            eventHandlers={{ click: () => selectPlace(searchedPlace) }}
-          />
-        )}
 
         {/* popup for a red pin */}
         {selectedPlace && placePosition && (
@@ -351,6 +449,21 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
               onClose={closePopups}
               onResize={refreshPopup}
             />
+          </Popup>
+        )}
+
+        {/*popup for a numbered pin, its rank, score and how many reviewed it */}
+        {selectedTop && topPosition && (
+          <Popup ref={popupRef} position={topPosition} {...POPUP_OPTIONS}>
+            <div className="top-popup">
+              <button className="top-popup-close" aria-label="Close" onClick={closePopups}>
+                ✕
+              </button>
+              <strong>{selectedTop.name}</strong>
+              <div>
+                #{selectedTop.rank} · {selectedTop.averageScore.toFixed(1)} · {selectedTop.reviewCount} reviews
+              </div>
+            </div>
           </Popup>
         )}
       </MapContainer>

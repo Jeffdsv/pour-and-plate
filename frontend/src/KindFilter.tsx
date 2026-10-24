@@ -13,9 +13,14 @@ const OPTIONS: { kind: PlaceKind; label: string }[] = [
 export default function KindFilter({
   selected,
   onChange,
+  topRated,
+  onTopRatedChange,
 }: {
   selected: PlaceKind[]
   onChange: (kinds: PlaceKind[]) => void
+  // NEW: is the top rated mode on, and what to do when its pill is clicked
+  topRated: boolean
+  onTopRatedChange: (on: boolean) => void
 }) {
   // takes the kind out if it was on, puts it in if it was off
   const toggle = (kind: PlaceKind) => {
@@ -24,6 +29,15 @@ export default function KindFilter({
 
   return (
     <div className="kind-filter">
+      {/* NEW: the top rated pill comes first, with a small gap so it reads as a mode, not a kind */}
+      <button
+        className={topRated ? 'kind-pill active top-rated-pill' : 'kind-pill top-rated-pill'}
+        aria-pressed={topRated}
+        onClick={() => onTopRatedChange(!topRated)}
+      >
+        ⭐ Top rated
+      </button>
+
       {OPTIONS.map((option) => {
         const isOn = selected.includes(option.kind)
         return (

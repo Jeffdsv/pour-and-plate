@@ -1,5 +1,6 @@
 import type { Restaurant, RestaurantStatus } from './types'
 import { apiFetch, csrfHeaders } from './api'
+import type { PlaceKind } from './places'
 
 // what we send when saving, same fields as SaveRestaurantRequest in java
 export interface SaveRestaurantRequest {
@@ -85,6 +86,29 @@ export async function fetchActivity(): Promise<FriendActivity[]> {
   const response = await apiFetch('/api/restaurants/activity')
   if (!response.ok) {
     throw new Error(`activity answered ${response.status}`)
+  }
+  return response.json()
+}
+
+
+// one ranked place, from GET /api/restaurants/top
+export interface TopPlace {
+  placeId: string
+  name: string
+  latitude: number
+  longitude: number
+  reviewCount: number
+  averageScore: number
+  rank: number
+}
+
+// the best rated places, at least 2 reviews each, best first
+// no kinds gives the overall ranking, with kinds the numbers start at 1 within those kinds
+export async function fetchTopPlaces(kinds: PlaceKind[]): Promise<TopPlace[]> {
+  const query = kinds.length > 0 ? `?kinds=${kinds.join(',')}` : ''
+  const response = await apiFetch(`/api/restaurants/top${query}`)
+  if (!response.ok) {
+    throw new Error(`top places answered ${response.status}`)
   }
   return response.json()
 }

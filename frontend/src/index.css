@@ -1230,3 +1230,39 @@ a.google-toggle {
   font-size: 12px;
   font-weight: 600;
 }
+
+/* a little extra space after top rated, so it looks like its own thing */
+.top-rated-pill {
+  margin-right: 8px;
+}
+
+/* the small popup for a numbered top rated pin */
+.top-popup {
+  position: relative;
+  padding-right: 24px;
+  line-height: 1.5;
+}
+
+.top-popup-close {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* the message in the middle of the map when nothing has 2 reviews yet */
+.top-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}

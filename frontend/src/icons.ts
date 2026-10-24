@@ -63,3 +63,27 @@ export function countIcon(count: number): L.DivIcon {
   countIcons.set(count, icon)
   return icon
 }
+
+
+// pins with a rank number for top rated, made once per rank and then reused
+const rankIcons = new Map<number, L.DivIcon>()
+
+// gold and a bit bigger for the top 3, purple for the rest
+export function rankIcon(rank: number): L.DivIcon {
+  const existing = rankIcons.get(rank)
+  if (existing) {
+    return existing
+  }
+
+  const isTopThree = rank <= 3
+  // dark text on gold is easier to read than white
+  const textColor = isTopThree ? '#412402' : 'white'
+  const number = `
+    <text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="bold"
+          font-family="sans-serif" fill="${textColor}">${rank}</text>
+  `
+
+  const icon = isTopThree ? makeIcon('#EF9F27', number, 34) : makeIcon('#534AB7', number, 30)
+  rankIcons.set(rank, icon)
+  return icon
+}
