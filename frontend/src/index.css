@@ -1231,27 +1231,7 @@ a.google-toggle {
   font-weight: 600;
 }
 
-/* a little extra space after top rated, so it looks like its own thing */
-.top-rated-pill {
-  margin-right: 8px;
-}
-
-/* the small popup for a numbered top rated pin */
-.top-popup {
-  position: relative;
-  padding-right: 24px;
-  line-height: 1.5;
-}
-
-.top-popup-close {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-size: 14px;
-}
+/* ========== top rated ========== */
 
 /* the message in the middle of the map when nothing has 2 reviews yet */
 .top-empty {
@@ -1276,4 +1256,153 @@ a.google-toggle {
   padding: 6px 10px;
   border-radius: 8px;
   margin-bottom: 10px;
+}
+
+/* ========== show or hide buttons ========== */
+
+/* the three round show or hide buttons left of the search */
+.layer-toggles {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.layer-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.layer-toggle svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* space between the icon and the name in a kind pill */
+.kind-label {
+  margin-left: 6px;
+}
+
+/* ========== filter panel on a phone ========== */
+
+/* the filter button is hidden on a computer, it only shows on a phone */
+.filter-button {
+  display: none;
+}
+
+/* the filter panel slides up from the bottom of the map, like the near you panel on a phone */
+.filter-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1050;
+  padding: 12px 16px 20px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: white;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.filter-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filter-sheet h3 {
+  margin: 4px 0 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.filter-sheet .layer-toggles {
+  margin-bottom: 12px;
+}
+
+.filter-sheet .layer-toggle {
+  width: 42px;
+  height: 42px;
+}
+
+/* in the panel the kinds become big tiles, three per row, icon over the name */
+.filter-sheet .kind-filter {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 0;
+  overflow: visible;
+}
+
+.filter-sheet .kind-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border-radius: 12px;
+  box-shadow: none;
+  white-space: normal;
+}
+
+.filter-sheet .kind-icon {
+  font-size: 22px;
+}
+
+.filter-sheet .kind-label {
+  margin-left: 0;
+}
+
+/* on a phone: one slim row with search, the filter button and near me */
+@media (max-width: 768px) {
+  /* the round buttons and the kind pills move into the filter panel */
+  .map-top .layer-toggles,
+  .map-top .kind-filter {
+    display: none;
+  }
+
+  .filter-button {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border: 1px solid #D1D5DB;
+    border-radius: 50%;
+    background: white;
+    color: var(--blue);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .filter-button.open {
+    background: var(--blue-light);
+  }
+
+  /* the small number in the corner of the filter button */
+  .filter-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    border-radius: 9px;
+    background: var(--blue);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }

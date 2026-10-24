@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CircleMarker, MapContainer, Marker, Popup, useMap } from 'react-leaflet'
+import { CircleMarker, MapContainer, Marker, Popup, useMap, useMapEvents, ZoomControl } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Restaurant } from './types'
 import { fetchPlaces, type Bounds, type Place, type PlaceKind } from './places'
 import KindFilter from './KindFilter'
+import LayerToggles from './LayerToggles'
+import FilterSheet from './FilterSheet'
 import SearchBox from './SearchBox'
 import NearMe from './NearMe'
 import NearPanel from './NearPanel'
@@ -71,6 +73,12 @@ function VisibleAreaWatcher({ onChange }: { onChange: (bounds: Bounds | null) =>
   }, [map, onChange])
 
   // draws nothing, it only listens
+  return null
+}
+
+// sits inside the map and tells MapPage when the map itself is tapped, not a pin
+function MapClickWatcher({ onClick }: { onClick: () => void }) {
+  useMapEvents({ click: onClick })
   return null
 }
 
@@ -147,8 +155,16 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
   // which kinds of places to show, none from the start so the map is clean until you pick something
   const [kinds, setKinds] = useState<PlaceKind[]>([])
 
-  // true when the top rated pill is on, the map then shows only the ranked places
-  const [topRated, setTopRated] = useState(false)
+  // the three buttons left of the search, top rated starts off, my own pins start on
+  const [showTopRated, setShowTopRated] = useState(false)
+  const [showVisited, setShowVisited] = useState(true)
+  const [showWant, setShowWant] = useState(true)
+
+  // true while the filter panel is open, only used on a phone
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  // the number on the filter button, how many things are turned on
+  const activeCount = (showTopRated ? 1 : 0) + (showVisited ? 1 : 0) + (showWant ? 1 : 0) + kinds.length
 
   // the last ranking that came back, and which kinds it was asked for
   const [topResult, setTopResult] = useState<{ key: string; places: TopPlace[] } | null>(null)
@@ -157,7 +173,7 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
   const topKey = kinds.join(',')
 
   // the ranking to show, null while the answer for the selected kinds has not come back yet
-  const topPlaces = topRated && topResult?.key === topKey ? topResult.places : null
+  const topPlaces = showTopRated && topResult?.key === topKey ? topResult.places : null
 
   // the numbered pin that was clicked, its banner shows at the top of the popup
   const [selectedTop, setSelectedTop] = useState<TopPlace | null>(null)
@@ -204,9 +220,9 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
 
   // load places again when the map moves or the filter changes
   useEffect(() => {
-    // top rated shows only ranked places, so no need to load the red pins
+    // top rated hides the red pins, so no need to load them
     // zoomed out too far, or every pill turned off, nothing to ask for
-    if (topRated || bounds === null || kinds.length === 0) {
+    if (showTopRated || bounds === null || kinds.length === 0) {
       return
     }
 
@@ -224,11 +240,11 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
     return () => {
       cancelled = true
     }
-  }, [bounds, kinds, topRated])
+  }, [bounds, kinds, showTopRated])
 
   // load the ranking when top rated is turned on, or the kinds change while it is on
   useEffect(() => {
-    if (!topRated) {
+    if (!showTopRated) {
       return
     }
 
@@ -246,16 +262,19 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
     return () => {
       cancelled = true
     }
-  }, [topRated, kinds])
+  }, [showTopRated, kinds])
 
   // clicking a red pin closes any open popup for saved pins, and the other way round
+  // it also forgets any numbered pin, so its banner does not show on the wrong popup
   const selectPlace = (p: Place) => {
     setSelectedRestaurant(null)
+    setSelectedTop(null)
     setSelectedPlace(p)
   }
 
   const selectRestaurant = (r: Restaurant) => {
     setSelectedPlace(null)
+    setSelectedTop(null)
     setSelectedRestaurant(r)
   }
 
@@ -279,20 +298,28 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
         likelyClosed: t.likelyClosed,
       })
     }
+    // set after the select above, so the banner shows for this popup
     setSelectedTop(t)
   }
 
   const closePopups = () => {
     setSelectedPlace(null)
     setSelectedRestaurant(null)
-    // and forget which numbered pin was clicked, so the banner goes away
     setSelectedTop(null)
   }
 
-  // switching top rated on or off closes any open popup, its pin may disappear
+  // any of the three buttons closes an open popup, because its pin may disappear
   const handleTopRated = (on: boolean) => {
     closePopups()
-    setTopRated(on)
+    setShowTopRated(on)
+  }
+  const handleVisited = (on: boolean) => {
+    closePopups()
+    setShowVisited(on)
+  }
+  const handleWant = (on: boolean) => {
+    closePopups()
+    setShowWant(on)
   }
 
   // a place picked in the search: fly there and open its popup
@@ -340,6 +367,17 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
   // skip places already saved, so they are not drawn twice
   const savedIds = new Set(restaurants.map((r) => r.placeId))
 
+  // places that have a numbered pin right now, they are not drawn a second time as my own pin
+  const rankedIds = new Set((topPlaces ?? []).map((t) => t.placeId))
+
+  // my own pins: only the statuses whose button is on, and not the ones already shown as a number
+  // a review without a place id can never have a numbered pin, so it is always shown
+  const visibleRestaurants = restaurants.filter(
+    (r) =>
+      (r.status === 'VISITED' ? showVisited : showWant) &&
+      (r.placeId === null || !rankedIds.has(r.placeId)),
+  )
+
   // nothing to show when zoomed out or when every pill is off
   const visiblePlaces = bounds === null || kinds.length === 0 ? [] : places
 
@@ -350,21 +388,61 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
 
   return (
     <>
-      {/* search and filter pills on top of the map, only on my own map */}
+      {/* buttons, search and filter pills on top of the map, only on my own map */}
       {!readOnly && (
         <div className="map-top">
-          {/* search and near me side by side, the filter pills under them */}
+          {/* on a computer: the three buttons, search and near me, the kind pills under them */}
+          {/* on a phone the css hides the buttons and pills, and shows the filter button instead */}
           <div className="map-top-row">
+            <LayerToggles
+              topRated={showTopRated}
+              visited={showVisited}
+              want={showWant}
+              onTopRatedChange={handleTopRated}
+              onVisitedChange={handleVisited}
+              onWantChange={handleWant}
+            />
             <SearchBox onPick={handlePick} />
+
+            {/* opens the filter panel on a phone, the number shows how many things are on */}
+            <button
+              className={filtersOpen ? 'filter-button open' : 'filter-button'}
+              aria-label="Filters"
+              aria-expanded={filtersOpen}
+              onClick={() => setFiltersOpen(!filtersOpen)}
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1" />
+                <circle cx="15" cy="6" r="2" />
+                <circle cx="9" cy="12" r="2" />
+                <circle cx="17" cy="18" r="2" />
+              </svg>
+              {activeCount > 0 && <span className="filter-badge">{activeCount}</span>}
+            </button>
+
             <NearMe onLocated={handleLocated} />
           </div>
-          {/* handleTopRated instead of setTopRated, so popups close when switching */}
-          <KindFilter selected={kinds} onChange={setKinds} topRated={topRated} onTopRatedChange={handleTopRated} />
+          <KindFilter selected={kinds} onChange={setKinds} />
         </div>
       )}
 
+      {/* the filter panel from the bottom, only reachable on a phone because the button is hidden on a computer */}
+      {!readOnly && filtersOpen && (
+        <FilterSheet
+          kinds={kinds}
+          onKindsChange={setKinds}
+          topRated={showTopRated}
+          visited={showVisited}
+          want={showWant}
+          onTopRatedChange={handleTopRated}
+          onVisitedChange={handleVisited}
+          onWantChange={handleWant}
+          onClose={() => setFiltersOpen(false)}
+        />
+      )}
+
       {/* top rated is on, the ranking has loaded, and nothing has 2 reviews yet */}
-      {topRated && topPlaces !== null && topPlaces.length === 0 && (
+      {showTopRated && topPlaces !== null && topPlaces.length === 0 && (
         <div className="top-empty">
           {kinds.length === 0 ? 'No place has 2 reviews yet' : 'None of these kinds has 2 reviews yet'}
         </div>
@@ -375,11 +453,16 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
         <NearPanel position={myPosition} onPick={handleNearPick} onClose={() => setNearOpen(false)} />
       )}
 
-      <MapContainer center={STOCKHOLM} zoom={15} maxZoom={19} fadeAnimation={false} className="map">
+      <MapContainer center={STOCKHOLM} zoom={15} maxZoom={19} fadeAnimation={false} zoomControl={false} className="map">
         {/* the clean vector map background */}
         <VectorBaseMap />
 
+        {/* the zoom buttons in the bottom right, so they never cover the buttons and search at the top */}
+        <ZoomControl position="bottomright" />
+
         <VisibleAreaWatcher onChange={setBounds} />
+        {/* tapping the map closes the filter panel, like tapping outside a menu */}
+        <MapClickWatcher onClick={() => setFiltersOpen(false)} />
         <FlyToPlace place={searchedPlace} />
         <FlyToPosition position={myPosition} />
         <FitToTopPlaces places={topPlaces} />
@@ -393,8 +476,8 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
           />
         )}
 
-        {/* the normal pins, only when top rated is off */}
-        {!topRated && (
+        {/* the red pins and the searched pin, hidden while top rated is on so the ranking is easy to see */}
+        {!showTopRated && (
           <>
             {/* red pins grouped into number bubbles that split up when you zoom in */}
             <MarkerClusterGroup
@@ -414,16 +497,6 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
               ))}
             </MarkerClusterGroup>
 
-            {/* saved restaurants, orange with a fork or green with a smiley */}
-            {restaurants.map((r) => (
-              <Marker
-                key={r.id}
-                position={[r.latitude, r.longitude]}
-                icon={ICONS[r.status]}
-                eventHandlers={{ click: () => selectRestaurant(r) }}
-              />
-            ))}
-
             {/* the place picked in the search always gets its pin, even when its kind is filtered out */}
             {searchedPlace && !savedIds.has(searchedPlace.id) && (
               <Marker
@@ -434,6 +507,16 @@ function MapPage({ viewUserId }: { viewUserId: number | null }) {
             )}
           </>
         )}
+
+        {/* my saved places, orange with a fork or green with a smiley, each kind can be hidden with its button */}
+        {visibleRestaurants.map((r) => (
+          <Marker
+            key={r.id}
+            position={[r.latitude, r.longitude]}
+            icon={ICONS[r.status]}
+            eventHandlers={{ click: () => selectRestaurant(r) }}
+          />
+        ))}
 
         {/* the numbered pins, only when top rated is on */}
         {/* zIndexOffset puts a better rank on top when two pins overlap */}

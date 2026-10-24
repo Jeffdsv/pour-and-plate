@@ -10,7 +10,7 @@ const KIND_CHIPS: { value: KindChoice; label: string; name: string }[] = [
   { value: 'RESTAURANT', label: KIND_ICONS.RESTAURANT, name: 'Restaurants' },
   { value: 'CAFE', label: KIND_ICONS.CAFE, name: 'Cafés' },
   { value: 'WINE', label: KIND_ICONS.WINE, name: 'Wine bars' },
-  { value: 'BEER', label: KIND_ICONS.BEER, name: 'Beer places' },
+  { value: 'BEER', label: KIND_ICONS.BEER, name: 'Beer' },
   { value: 'BAR', label: KIND_ICONS.BAR, name: 'Bars' },
 ]
 

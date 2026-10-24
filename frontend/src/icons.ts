@@ -9,13 +9,13 @@ const PLATE = `
 `
 
 // a white fork with three tines
-const FORK = `
+export const FORK = `
   <path fill="white" d="M9 4 V9 A3 3 0 0 0 11 11.83 V20 H13 V11.83 A3 3 0 0 0 15 9 V4
                          H13.8 V9 H12.6 V4 H11.4 V9 H10.2 V4 Z" />
 `
 
 // a white smiley: two eyes and a curved mouth
-const SMILEY = `
+export const SMILEY = `
   <circle cx="9" cy="10" r="1.4" fill="white" />
   <circle cx="15" cy="10" r="1.4" fill="white" />
   <path d="M8 14 Q12 18 16 14" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" />
