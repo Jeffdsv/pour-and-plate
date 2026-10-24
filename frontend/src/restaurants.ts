@@ -92,11 +92,18 @@ export async function fetchActivity(): Promise<FriendActivity[]> {
 
 
 // one ranked place, from GET /api/restaurants/top
+// it has the same details as a place, so the map can open the normal place popup
 export interface TopPlace {
   placeId: string
   name: string
   latitude: number
   longitude: number
+  category: string
+  address: string | null
+  city: string | null
+  website: string | null
+  kind: PlaceKind
+  likelyClosed: boolean
   reviewCount: number
   averageScore: number
   rank: number

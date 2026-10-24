@@ -102,11 +102,18 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
 
     // the best rated places, a place needs at least 2 visited reviews to be ranked
     // RANK numbers the rows after grouping, places with the exact same score and count share a rank
+    // LEFT JOIN place gives the details for the popup, and keeps the reviews even if a place was removed in a refresh
     @Query(value = """
             SELECT r.place_id       AS "placeId",
                    MIN(r.name)      AS "name",
                    MIN(r.latitude)  AS "latitude",
                    MIN(r.longitude) AS "longitude",
+                   COALESCE(MIN(p.category), 'restaurant')     AS "category",
+                   COALESCE(MIN(p.address), MIN(r.address))    AS "address",
+                   COALESCE(MIN(p.city), MIN(r.city))          AS "city",
+                   COALESCE(MIN(p.website), MIN(r.website))    AS "website",
+                   COALESCE(MIN(p.kind), 'RESTAURANT')         AS "kind",
+                   COALESCE(BOOL_OR(p.likely_closed), false)   AS "likelyClosed",
                    COUNT(*)         AS "reviewCount",
                    ROUND(AVG((r.food_rating + r.atmosphere_rating + r.value_rating) / 3.0), 1) AS "averageScore",
                    RANK() OVER (
@@ -114,6 +121,7 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
                                 COUNT(*) DESC
                    ) AS "rank"
             FROM restaurant r
+            LEFT JOIN place p ON p.id = r.place_id
             WHERE r.status = 'VISITED'
               AND r.place_id IS NOT NULL
             GROUP BY r.place_id
@@ -131,6 +139,12 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
                    MIN(r.name)      AS "name",
                    MIN(r.latitude)  AS "latitude",
                    MIN(r.longitude) AS "longitude",
+                   MIN(p.category)  AS "category",
+                   COALESCE(MIN(p.address), MIN(r.address)) AS "address",
+                   COALESCE(MIN(p.city), MIN(r.city))       AS "city",
+                   COALESCE(MIN(p.website), MIN(r.website)) AS "website",
+                   MIN(p.kind)      AS "kind",
+                   BOOL_OR(p.likely_closed) AS "likelyClosed",
                    COUNT(*)         AS "reviewCount",
                    ROUND(AVG((r.food_rating + r.atmosphere_rating + r.value_rating) / 3.0), 1) AS "averageScore",
                    RANK() OVER (

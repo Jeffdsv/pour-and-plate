@@ -1266,3 +1266,14 @@ a.google-toggle {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   pointer-events: none;
 }
+
+/* the gold strip at the top of a popup opened from a numbered pin */
+.top-banner {
+  background: #FAEEDA;
+  color: #633806;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
