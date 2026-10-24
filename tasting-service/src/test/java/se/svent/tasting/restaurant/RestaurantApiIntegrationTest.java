@@ -288,6 +288,47 @@ class RestaurantApiIntegrationTest {
         assertThat(names).containsExactly("Erik place 4", "Erik place 3", "Erik place 2");
     }
 
+
+    // top places: at least 2 visited reviews, best score first, more reviews wins a tie
+    @Test
+    void top_ranksByScoreThenReviews_needsTwoReviews() throws Exception {
+        AppUser erik = otherUser();
+        AppUser anna = anna();
+
+        // 9.0 from two reviews, should be number 1
+        post(visitedJson("top-1", "Best", 9));
+        saveVisited(erik, "top-1", "Best", 9);
+
+        // 8.0 from three reviews, beats the other 8.0 because more people agree
+        post(visitedJson("top-2", "Popular", 8));
+        saveVisited(erik, "top-2", "Popular", 8);
+        saveVisited(anna, "top-2", "Popular", 8);
+
+        // 8.0 from two reviews, number 3
+        post(visitedJson("top-3", "Also eight", 8));
+        saveVisited(erik, "top-3", "Also eight", 8);
+
+        // a perfect score but only one review, so it should not be ranked
+        post(visitedJson("top-4", "Only one", 10));
+
+        // erik visited and i only want to go, a wish is not a review, so still only one
+        post(wantJson("top-5", "Wished"));
+        saveVisited(erik, "top-5", "Wished", 10);
+
+        HttpResponse<String> response = get("/api/restaurants/top");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        List<String> names = JsonPath.read(response.body(), "$[*].name");
+        List<Integer> ranks = JsonPath.read(response.body(), "$[*].rank");
+        assertThat(names).containsExactly("Best", "Popular", "Also eight");
+        assertThat(ranks).containsExactly(1, 2, 3);
+
+        Double bestScore = JsonPath.read(response.body(), "$[0].averageScore");
+        Integer popularReviews = JsonPath.read(response.body(), "$[1].reviewCount");
+        assertThat(bestScore).isEqualTo(9.0);
+        assertThat(popularReviews).isEqualTo(3);
+    }
+
     // helpers
 
     // logs in like the frontend does: get a csrf cookie first, then send username and password
@@ -368,5 +409,19 @@ class RestaurantApiIntegrationTest {
                 INSERT INTO place (id, name, category, latitude, longitude, imported_at)
                 VALUES (?, ?, ?, 59.33, 18.06, now())
                 """, id, name, category);
+    }
+
+
+    // a third person, so a place can have more reviews than just erik and me
+    private AppUser anna() {
+        return users.findByUsername("anna")
+                .orElseGet(() -> users.save(new AppUser("anna", "Anna", "not used", Role.FRIEND)));
+    }
+
+    // saves a visited review for someone else, with the same rating for all three
+    private void saveVisited(AppUser user, String placeId, String name, int rating) {
+        Restaurant review = Restaurant.visited(user, name, LAT, LON, rating, rating, rating, null);
+        review.setPlaceId(placeId);
+        repository.save(review);
     }
 }

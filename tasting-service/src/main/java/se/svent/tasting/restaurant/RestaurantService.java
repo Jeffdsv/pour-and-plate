@@ -56,6 +56,13 @@ public class RestaurantService {
         return repository.findGoTogetherPlaces();
     }
 
+
+    // the best rated places, at least 2 visited reviews each, best first
+    @Transactional(readOnly = true)
+    public List<TopPlace> findTopPlaces() {
+        return repository.findTopPlaces();
+    }
+
     // my average ratings per kind of food, best first
     @Transactional(readOnly = true)
     public List<TasteRow> findTasteProfile(String username) {

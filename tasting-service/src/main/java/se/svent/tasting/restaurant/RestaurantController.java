@@ -37,6 +37,13 @@ public class RestaurantController {
         return service.findGoTogetherPlaces();
     }
 
+
+    // GET /api/restaurants/top gives the best rated places, at least 2 reviews each, best first
+    @GetMapping("/top")
+    public List<TopPlace> top() {
+        return service.findTopPlaces();
+    }
+
     // GET /api/restaurants/taste gives my average ratings per kind of food, best first
     @GetMapping("/taste")
     public List<TasteRow> taste(Authentication authentication) {

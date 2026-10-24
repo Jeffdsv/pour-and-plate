@@ -98,4 +98,28 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
             LIMIT 30
             """, nativeQuery = true)
     List<FriendActivity> findFriendActivity(@Param("userId") Long userId, @Param("perFriend") int perFriend);
+
+
+    // the best rated places, a place needs at least 2 visited reviews to be ranked
+    // RANK numbers the rows after grouping, places with the exact same score and count share a rank
+    @Query(value = """
+            SELECT r.place_id       AS "placeId",
+                   MIN(r.name)      AS "name",
+                   MIN(r.latitude)  AS "latitude",
+                   MIN(r.longitude) AS "longitude",
+                   COUNT(*)         AS "reviewCount",
+                   ROUND(AVG((r.food_rating + r.atmosphere_rating + r.value_rating) / 3.0), 1) AS "averageScore",
+                   RANK() OVER (
+                       ORDER BY ROUND(AVG((r.food_rating + r.atmosphere_rating + r.value_rating) / 3.0), 1) DESC,
+                                COUNT(*) DESC
+                   ) AS "rank"
+            FROM restaurant r
+            WHERE r.status = 'VISITED'
+              AND r.place_id IS NOT NULL
+            GROUP BY r.place_id
+            HAVING COUNT(*) >= 2
+            ORDER BY "rank", MIN(r.name)
+            LIMIT 20
+            """, nativeQuery = true)
+    List<TopPlace> findTopPlaces();
 }
